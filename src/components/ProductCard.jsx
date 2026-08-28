@@ -48,7 +48,7 @@ const ProductCard = ({ product }) => {
               <img
                 src={primaryImage.image_url}
                 alt={product.name}
-                className={`w-8/9 h-full object-contain mix-blend-multiply transition-all duration-700 ${
+                className={`w-full h-full object-contain mix-blend-multiply transition-all duration-700 ${
                   isHovered && secondImage ? 'opacity-0' : 'opacity-100 scale-100'
                 } ${isHovered ? 'scale-105' : ''}`}
               />
@@ -56,7 +56,7 @@ const ProductCard = ({ product }) => {
                 <img
                   src={secondImage.image_url}
                   alt={product.name}
-                  className={`absolute inset-0 w-8/9 h-full object-contain mix-blend-multiply mx-auto my-auto transition-all duration-700 ${
+                  className={`absolute inset-0 w-full h-full object-contain mix-blend-multiply mx-auto my-auto transition-all duration-700 ${
                     isHovered ? 'opacity-100 scale-105' : 'opacity-0'
                   }`}
                 />
