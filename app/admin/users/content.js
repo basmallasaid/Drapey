@@ -75,12 +75,12 @@ export default function UsersContent({ users }) {
           placeholder="Search by name, email, or phone..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="flex-1 px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
+          className="flex-1 px-4 py-2.5 border border-taupe rounded-lg text-sm text-charcoal bg-white focus:outline-none focus:ring-2 focus:ring-pebble focus:border-pebble"
         />
         <select
           value={roleFilter}
           onChange={(e) => setRoleFilter(e.target.value)}
-          className="px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
+          className="px-4 py-2.5 border border-taupe rounded-lg text-sm text-charcoal bg-white focus:outline-none focus:ring-2 focus:ring-pebble"
         >
           <option value="all">All Roles</option>
           <option value="admin">Admin</option>
@@ -89,11 +89,11 @@ export default function UsersContent({ users }) {
       </div>
 
       {/* Table */}
-      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+      <div className="bg-white rounded-xl border border-sand shadow-card overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-gray-100 text-left text-gray-500">
+              <tr className="border-b border-sand text-left text-stone bg-cream">
                 <th className="px-5 py-3 font-medium">User</th>
                 <th className="px-5 py-3 font-medium">Phone</th>
                 <th className="px-5 py-3 font-medium">Role</th>
@@ -104,34 +104,34 @@ export default function UsersContent({ users }) {
             <tbody>
               {filtered.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="px-5 py-8 text-center text-gray-500">No users found</td>
+                  <td colSpan={5} className="px-5 py-8 text-center text-charcoal-soft">No users found</td>
                 </tr>
               ) : (
                 filtered.map((u) => (
-                  <tr key={u.id} className="border-b border-gray-50 last:border-0 hover:bg-gray-50">
+                  <tr key={u.id} className="border-b border-sand last:border-0 hover:bg-row-hover">
                     <td className="px-5 py-3">
-                      <p className="font-medium text-gray-900">
+                      <p className="font-medium text-charcoal">
                         {u.full_name || "No name"}
-                        {u.id === currentUser?.id && <span className="ml-2 text-xs text-gray-400">(you)</span>}
+                        {u.id === currentUser?.id && <span className="ml-2 text-xs text-stone">(you)</span>}
                       </p>
-                      <p className="text-xs text-gray-400">{u.email}</p>
+                      <p className="text-xs text-stone">{u.email}</p>
                     </td>
-                    <td className="px-5 py-3 text-gray-600">{u.phone || "—"}</td>
+                    <td className="px-5 py-3 text-charcoal-soft">{u.phone || "—"}</td>
                     <td className="px-5 py-3">
                       <span className={`inline-flex px-2 py-1 rounded-full text-xs font-medium capitalize ${
-                        u.role === "admin" ? "bg-purple-100 text-purple-700" : "bg-gray-100 text-gray-700"
+                        u.role === "admin" ? "bg-taupe text-charcoal" : "bg-cream text-charcoal-soft"
                       }`}>
                         {u.role}
                       </span>
                     </td>
-                    <td className="px-5 py-3 text-gray-500">{new Date(u.created_at).toLocaleDateString()}</td>
+                    <td className="px-5 py-3 text-charcoal-soft">{new Date(u.created_at).toLocaleDateString()}</td>
                     <td className="px-5 py-3">
                       <div className="flex items-center justify-end gap-2">
                         <select
                           value={u.role}
                           onChange={(e) => handleRoleChange(u.id, e.target.value)}
                           disabled={updating === u.id || u.id === currentUser?.id}
-                          className="px-2 py-1 border border-gray-200 rounded text-xs focus:outline-none focus:ring-1 focus:ring-teal-500 disabled:opacity-40"
+                          className="px-2 py-1 border border-taupe rounded text-xs bg-white focus:outline-none focus:ring-1 focus:ring-pebble disabled:opacity-40"
                         >
                           <option value="customer">Customer</option>
                           <option value="admin">Admin</option>
@@ -154,7 +154,7 @@ export default function UsersContent({ users }) {
         </div>
       </div>
 
-      <p className="mt-3 text-xs text-gray-400">{filtered.length} user{filtered.length !== 1 ? "s" : ""} shown</p>
+      <p className="mt-3 text-xs text-stone">{filtered.length} user{filtered.length !== 1 ? "s" : ""} shown</p>
     </div>
   );
 }
