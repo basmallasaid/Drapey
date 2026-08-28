@@ -19,17 +19,28 @@ export default function OrdersContent({ orders }) {
   const [updating, setUpdating] = useState(null);
   const [message, setMessage] = useState(null);
   const [expanded, setExpanded] = useState(null);
+  const [pendingCancelId, setPendingCancelId] = useState(null);
 
   const filtered = orders.filter((o) => {
     const matchSearch =
       o.id?.includes(search) ||
       o.users?.full_name?.toLowerCase().includes(search.toLowerCase()) ||
-      o.users?.email?.toLowerCase().includes(search.toLowerCase());
+      o.users?.email?.toLowerCase().includes(search.toLowerCase()) ||
+      o.customer_name?.toLowerCase().includes(search.toLowerCase());
     const matchStatus = statusFilter === "all" || o.status === statusFilter;
     return matchSearch && matchStatus;
   });
 
   async function handleStatusChange(orderId, newStatus) {
+    // Confirm the destructive cancellation action before applying.
+    if (newStatus === "cancelled") {
+      setPendingCancelId(orderId);
+      return;
+    }
+    await submitStatusChange(orderId, newStatus);
+  }
+
+  async function submitStatusChange(orderId, newStatus) {
     setUpdating(orderId);
     setMessage(null);
     try {
@@ -38,14 +49,30 @@ export default function OrdersContent({ orders }) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ orderId, status: newStatus }),
       });
-      if (!res.ok) throw new Error("Failed to update status");
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || "Failed to update status");
+      }
       setMessage({ type: "success", text: "Status updated" });
+      setPendingCancelId(null);
       window.location.reload();
     } catch (e) {
       setMessage({ type: "error", text: e.message });
     } finally {
       setUpdating(null);
     }
+  }
+
+  function renderAddress(o) {
+    const parts = [
+      o.street,
+      o.building ? `Bldg ${o.building}` : "",
+      o.floor ? `Fl ${o.floor}` : "",
+      o.apartment ? `Apt ${o.apartment}` : "",
+      o.area,
+      o.city && o.governorate ? `${o.city}, ${o.governorate}` : (o.city || o.governorate || ""),
+    ].filter(Boolean);
+    return parts.length > 0 ? parts.join(", ") : "—";
   }
 
   return (
@@ -99,8 +126,8 @@ export default function OrdersContent({ orders }) {
                     <tr className="border-b border-gray-50 last:border-0 hover:bg-gray-50">
                       <td className="px-5 py-3 font-mono text-xs text-gray-600">#{o.id.slice(0, 8)}</td>
                       <td className="px-5 py-3">
-                        <p className="text-gray-900">{o.users?.full_name || "N/A"}</p>
-                        <p className="text-xs text-gray-400">{o.users?.email}</p>
+                        <p className="text-gray-900">{o.users?.full_name || o.customer_name || "N/A"}</p>
+                        <p className="text-xs text-gray-400">{o.users?.email || o.customer_email}</p>
                       </td>
                       <td className="px-5 py-3 text-gray-600">{o.order_items?.length || 0}</td>
                       <td className="px-5 py-3 font-medium">${(o.total_amount || 0).toFixed(2)}</td>
@@ -138,9 +165,14 @@ export default function OrdersContent({ orders }) {
                             <div>
                               <p className="text-xs font-medium text-gray-500 mb-1">Items</p>
                               {o.order_items?.map((item, i) => (
-                                <div key={i} className="flex justify-between text-sm py-1">
-                                  <span className="text-gray-700">{item.products?.name} x{item.quantity}</span>
-                                  <span className="font-medium">${((item.price || 0) * (item.quantity || 1)).toFixed(2)}</span>
+                                <div key={i} className="text-sm py-1 border-b border-gray-100 last:border-0">
+                                  <div className="flex justify-between">
+                                    <span className="text-gray-700">{item.product_name}</span>
+                                    <span className="font-medium">${(item.total_price || 0).toFixed(2)}</span>
+                                  </div>
+                                  <div className="text-xs text-gray-400">
+                                    {item.size} / {item.color} · qty {item.quantity} @ ${(item.unit_price || 0).toFixed(2)}
+                                  </div>
                                 </div>
                               ))}
                               <div className="border-t border-gray-200 mt-2 pt-2 flex justify-between text-sm">
@@ -149,30 +181,26 @@ export default function OrdersContent({ orders }) {
                               </div>
                               <div className="flex justify-between text-sm">
                                 <span className="text-gray-500">Shipping</span>
-                                <span>${(o.shipping_fee || 0).toFixed(2)}</span>
+                                <span>{o.shipping_fee === 0 ? "FREE" : `$${(o.shipping_fee || 0).toFixed(2)}`}</span>
                               </div>
+                              {Number(o.discount) > 0 && (
+                                <div className="flex justify-between text-sm">
+                                  <span className="text-gray-500">Discount</span>
+                                  <span>-${(o.discount || 0).toFixed(2)}</span>
+                                </div>
+                              )}
                               <div className="flex justify-between text-sm font-bold">
                                 <span>Total</span>
                                 <span>${(o.total_amount || 0).toFixed(2)}</span>
                               </div>
                             </div>
                             <div>
-                              {o.shipping_address && (
-                                <div>
-                                  <p className="text-xs font-medium text-gray-500 mb-1">Shipping Address</p>
-                                  <p className="text-sm text-gray-700">
-                                    {typeof o.shipping_address === "string" ? o.shipping_address : (
-                                      <>
-                                        {o.shipping_address.full_name}<br />
-                                        {o.shipping_address.address_line_1}<br />
-                                        {o.shipping_address.address_line_2 && <>{o.shipping_address.address_line_2}<br /></>}
-                                        {o.shipping_address.city}, {o.shipping_address.state} {o.shipping_address.postal_code}<br />
-                                        {o.shipping_address.phone}
-                                      </>
-                                    )}
-                                  </p>
-                                </div>
-                              )}
+                              <p className="text-xs font-medium text-gray-500 mb-1">Customer</p>
+                              <p className="text-sm text-gray-700">{o.customer_name}</p>
+                              <p className="text-sm text-gray-700">{o.customer_phone}</p>
+                              <p className="text-sm text-gray-700">{o.customer_email}</p>
+                              <p className="text-xs font-medium text-gray-500 mt-3 mb-1">Delivery Address</p>
+                              <p className="text-sm text-gray-700">{renderAddress(o)}</p>
                               {o.notes && (
                                 <div className="mt-3">
                                   <p className="text-xs font-medium text-gray-500 mb-1">Notes</p>
@@ -193,6 +221,31 @@ export default function OrdersContent({ orders }) {
       </div>
 
       <p className="mt-3 text-xs text-gray-400">{filtered.length} order{filtered.length !== 1 ? "s" : ""} shown</p>
+
+      {/* Cancel confirmation */}
+      {pendingCancelId && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/50" onClick={() => setPendingCancelId(null)} />
+          <div className="relative bg-white w-full max-w-md p-8 rounded-xl">
+            <h3 className="text-lg font-semibold text-gray-900 mb-3">Cancel this order?</h3>
+            <p className="text-sm text-gray-600 mb-6">
+              Cancelling restores the purchased stock. Confirm you want to mark this order as cancelled?
+            </p>
+            <div className="flex justify-end gap-3">
+              <button onClick={() => setPendingCancelId(null)} className="px-4 py-2 border border-gray-300 rounded-lg text-sm text-gray-700 hover:bg-gray-50">
+                Keep Order
+              </button>
+              <button
+                onClick={() => submitStatusChange(pendingCancelId, "cancelled")}
+                disabled={updating === pendingCancelId}
+                className="px-4 py-2 bg-red-600 text-white rounded-lg text-sm font-medium hover:bg-red-700 disabled:opacity-50"
+              >
+                {updating === pendingCancelId ? "Cancelling..." : "Confirm Cancellation"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

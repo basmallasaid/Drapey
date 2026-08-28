@@ -49,13 +49,19 @@ export async function DELETE(request) {
     return NextResponse.json({ error: "Cannot delete yourself" }, { status: 400 });
   }
 
-  // Delete user data first
-  await supabase.from("cart_items").delete().eq("user_id", userId);
-  await supabase.from("cart").delete().eq("user_id", userId);
-  await supabase.from("favorites").delete().eq("user_id", userId);
-  await supabase.from("addresses").delete().eq("user_id", userId);
+  // Block deleting users who have orders (orders.user_id is ON DELETE
+  // RESTRICT, so a hard delete cannot succeed and would corrupt history).
+  const { count } = await supabase
+    .from("orders")
+    .select("*", { count: "exact", head: true })
+    .eq("user_id", userId);
 
-  // Delete the user row
+  if (count && count > 0) {
+    return NextResponse.json({ error: "Cannot delete a user who has orders." }, { status: 409 });
+  }
+
+  // cart, cart_items, favorites and addresses are ON DELETE CASCADE from users,
+  // so deleting the profile row cleans those up automatically.
   const { err } = await supabase.from("users").delete().eq("id", userId);
   if (err) return NextResponse.json({ error: err.message }, { status: 500 });
 

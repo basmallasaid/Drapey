@@ -57,8 +57,19 @@ export async function DELETE(request) {
 
   if (!id) return NextResponse.json({ error: "Category id is required" }, { status: 400 });
 
-  // Unlink products from this category
-  await supabase.from("products").update({ category_id: null }).eq("category_id", id);
+  // products.category_id is NOT NULL with ON DELETE RESTRICT, so a category
+  // that still has products cannot be safely deleted without breaking them.
+  // Block deletion and ask the admin to reassign the products first.
+  const { count } = await supabase
+    .from("products")
+    .select("*", { count: "exact", head: true })
+    .eq("category_id", id);
+
+  if (count && count > 0) {
+    return NextResponse.json({
+      error: `Cannot delete: ${count} product(s) still belong to this category. Reassign or remove them first.`,
+    }, { status: 409 });
+  }
 
   const { err } = await supabase.from("categories").delete().eq("id", id);
   if (err) return NextResponse.json({ error: err.message }, { status: 500 });

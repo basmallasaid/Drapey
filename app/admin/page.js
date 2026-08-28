@@ -1,11 +1,13 @@
-import { adminResponse } from "@/lib/supabase/admin";
+import { requireAdmin } from "@/lib/supabase/admin";
+import { redirect } from "next/navigation";
 import Link from "next/link";
 
 export const metadata = { title: "Admin Dashboard | Drapey" };
 
 export default async function AdminDashboardPage() {
-  const { error, supabase } = await adminResponse();
-  if (error) return null;
+  const { user, isAdmin, supabase } = await requireAdmin();
+  if (!user) redirect("/login");
+  if (!isAdmin) redirect("/");
 
   const [
     { count: totalUsers },
