@@ -221,7 +221,7 @@ export default async function AdminDashboardPage() {
   return (
     <div className="space-y-8">
       {/* 1. Stats Grid (real values; real MoM trends only, never fake) */}
-      <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
         {stats.map((s, i) => (
           <div key={i} className="bg-white p-6 rounded-[24px] border border-[#EBE2DA] shadow-sm">
             <div className="flex items-center gap-3 mb-4 text-[#8E8A84]">
@@ -261,22 +261,22 @@ export default async function AdminDashboardPage() {
           <div className="space-y-5">
             {topProductsWithImages.map((product, i) => (
               <div key={product.id} className="flex items-center gap-4">
-                <span className="text-xs font-bold text-[#8E8A84] w-4">{i + 1}</span>
+                <span className="text-xs font-bold text-[#8E8A84] w-4 shrink-0">{i + 1}</span>
                 {product.image_url ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img
                     src={product.image_url}
                     alt={product.name}
-                    className="w-10 h-10 object-cover rounded-lg bg-[#F3EFEA]"
+                    className="w-10 h-10 object-cover rounded-lg bg-[#F3EFEA] shrink-0"
                   />
                 ) : (
-                  <div className="w-10 h-10 bg-[#F3EFEA] rounded-lg"></div>
+                  <div className="w-10 h-10 bg-[#F3EFEA] rounded-lg shrink-0"></div>
                 )}
-                <div className="flex-1">
-                  <p className="text-xs font-bold text-[#3E3A36]">{product.name}</p>
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs font-bold text-[#3E3A36] truncate">{product.name}</p>
                   <p className="text-[10px] text-[#8E8A84]">{product.units} sold</p>
                 </div>
-                <div className="text-xs font-bold whitespace-nowrap">EGP {product.revenue.toLocaleString()}</div>
+                <div className="text-xs font-bold whitespace-nowrap shrink-0">EGP {product.revenue.toLocaleString()}</div>
               </div>
             ))}
           </div>
@@ -289,44 +289,46 @@ export default async function AdminDashboardPage() {
           <h3 className="font-bold text-[#3E3A36]">Recent Orders</h3>
           <Link href="/admin/orders" className="text-xs text-[#8E8A84] hover:text-black">View All</Link>
         </div>
-        <table className="w-full text-left">
-          <thead className="bg-[#FAF8F5] text-[11px] text-[#8E8A84] uppercase tracking-widest">
-            <tr>
-              <th className="px-6 py-4">Order ID</th>
-              <th className="px-6 py-4">Customer</th>
-              <th className="px-6 py-4 text-center">Date</th>
-              <th className="px-6 py-4 text-right">Amount</th>
-              <th className="px-6 py-4 text-center">Status</th>
-            </tr>
-          </thead>
-          <tbody className="text-sm divide-y divide-[#EBE2DA]">
-            {!recentOrdersRes.data?.length ? (
+        <div className="overflow-x-auto">
+          <table className="w-full text-left">
+            <thead className="bg-[#FAF8F5] text-[11px] text-[#8E8A84] uppercase tracking-widest">
               <tr>
-                <td colSpan={5} className="px-6 py-8 text-center text-[#8E8A84] text-xs">
-                  No orders yet
-                </td>
+                <th className="px-6 py-4">Order ID</th>
+                <th className="px-6 py-4">Customer</th>
+                <th className="px-6 py-4 text-center">Date</th>
+                <th className="px-6 py-4 text-right">Amount</th>
+                <th className="px-6 py-4 text-center">Status</th>
               </tr>
-            ) : (
-              recentOrdersRes.data.map((order) => (
-                <tr key={order.id} className="hover:bg-[#FCFAF8] transition-colors">
-                  <td className="px-6 py-4 text-[#8E8A84]">#ORD-{order.id.slice(0, 4)}</td>
-                  <td className="px-6 py-4 font-semibold">
-                    {order.customer_name || order.users?.full_name || "Guest"}
-                  </td>
-                  <td className="px-6 py-4 text-center text-[#8E8A84]">
-                    {new Date(order.created_at).toLocaleDateString()}
-                  </td>
-                  <td className="px-6 py-4 text-right font-bold">
-                    EGP {Number(order.total_amount).toLocaleString()}
-                  </td>
-                  <td className="px-6 py-4 text-center">
-                    <StatusBadge status={order.status} />
+            </thead>
+            <tbody className="text-sm divide-y divide-[#EBE2DA]">
+              {!recentOrdersRes.data?.length ? (
+                <tr>
+                  <td colSpan={5} className="px-6 py-8 text-center text-[#8E8A84] text-xs">
+                    No orders yet
                   </td>
                 </tr>
-              ))
-            )}
-          </tbody>
-        </table>
+              ) : (
+                recentOrdersRes.data.map((order) => (
+                  <tr key={order.id} className="hover:bg-[#FCFAF8] transition-colors">
+                    <td className="px-6 py-4 text-[#8E8A84] whitespace-nowrap">#ORD-{order.id.slice(0, 4)}</td>
+                    <td className="px-6 py-4 font-semibold whitespace-nowrap">
+                      {order.customer_name || order.users?.full_name || "Guest"}
+                    </td>
+                    <td className="px-6 py-4 text-center text-[#8E8A84] whitespace-nowrap">
+                      {new Date(order.created_at).toLocaleDateString()}
+                    </td>
+                    <td className="px-6 py-4 text-right font-bold whitespace-nowrap">
+                      EGP {Number(order.total_amount).toLocaleString()}
+                    </td>
+                    <td className="px-6 py-4 text-center whitespace-nowrap">
+                      <StatusBadge status={order.status} />
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   );

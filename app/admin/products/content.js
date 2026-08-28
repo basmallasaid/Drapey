@@ -149,7 +149,7 @@ export default function ProductsContent({ products, categories }) {
                    </div>
                    <div className="space-y-3">
                      {variants.map((v, i) => (
-                       <div key={i} className="flex items-center gap-3 bg-[#FAF8F5] p-3 rounded-xl border border-[#EBE2DA]">
+                       <div key={i} className="flex flex-wrap items-center gap-3 bg-[#FAF8F5] p-3 rounded-xl border border-[#EBE2DA]">
                          <select 
                             value={v.size === "" ? "" : !isCommonSize(normalizeSize(v.size)) ? "custom" : normalizeSize(v.size)}
                             onChange={(e) => {
@@ -157,14 +157,14 @@ export default function ProductsContent({ products, categories }) {
                               next[i].size = e.target.value === "custom" ? "" : e.target.value;
                               setVariants(next);
                             }}
-                            className="bg-transparent text-sm font-medium outline-none"
+                            className="bg-transparent text-sm font-medium outline-none flex-1 sm:flex-none"
                           >
                            <option value="">Size</option>
                            {COMMON_SIZES.map(s => <option key={s} value={s}>{s}</option>)}
                            <option value="custom">Other</option>
                          </select>
-                         <input placeholder="Color" value={v.color} onChange={(e) => {const next=[...variants]; next[i].color=e.target.value; setVariants(next)}} className="bg-transparent text-sm w-24 outline-none border-l border-[#EBE2DA] pl-3" />
-                         <input type="number" placeholder="Stock" value={v.stock_quantity} onChange={(e) => {const next=[...variants]; next[i].stock_quantity=Number(e.target.value); setVariants(next)}} className="bg-transparent text-sm w-16 outline-none border-l border-[#EBE2DA] pl-3" />
+                         <input placeholder="Color" value={v.color} onChange={(e) => {const next=[...variants]; next[i].color=e.target.value; setVariants(next)}} className="bg-transparent text-sm w-full sm:w-24 outline-none border-l sm:border-[#EBE2DA] sm:pl-3 py-1" />
+                         <input type="number" placeholder="Stock" value={v.stock_quantity} onChange={(e) => {const next=[...variants]; next[i].stock_quantity=Number(e.target.value); setVariants(next)}} className="bg-transparent text-sm w-full sm:w-16 outline-none border-l sm:border-[#EBE2DA] sm:pl-3 py-1" />
                          <button type="button" onClick={() => setVariants(variants.filter((_, idx) => idx !== i))} className="text-red-400 hover:text-red-600 ml-auto"><X size={16}/></button>
                        </div>
                      ))}
@@ -175,7 +175,7 @@ export default function ProductsContent({ products, categories }) {
               {/* Right Column: Media */}
               <div className="space-y-6">
                 <h4 className="text-xs font-bold uppercase tracking-widest text-[#8E8A84]">Product Media</h4>
-                <div className="grid grid-cols-3 gap-4">
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
                   {images.map((img, i) => (
                     <div key={i} className="relative aspect-[3/4] bg-[#FAF8F5] rounded-2xl border-2 border-dashed border-[#EBE2DA] overflow-hidden group">
                       {img.image_url ? (
@@ -219,6 +219,7 @@ export default function ProductsContent({ products, categories }) {
 
       {/* Table Section */}
       <div className="bg-white rounded-[24px] border border-[#EBE2DA] shadow-sm overflow-hidden">
+        <div className="overflow-x-auto">
         <table className="w-full text-left">
           <thead className="bg-[#FAF8F5] border-b border-[#EBE2DA]">
             <tr className="text-[11px] font-bold uppercase tracking-widest text-[#8E8A84]">
@@ -280,6 +281,7 @@ export default function ProductsContent({ products, categories }) {
             })}
           </tbody>
         </table>
+        </div>
       </div>
     </div>
   );

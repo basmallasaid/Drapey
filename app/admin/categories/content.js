@@ -152,7 +152,7 @@ export default function CategoriesContent({ categories }) {
                     <div className="w-full h-full flex items-center justify-center text-[#8E8A84]"><ImageIcon size={20}/></div>
                   )}
                 </div>
-                <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                <div className="flex gap-1 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
                   <button onClick={() => startEdit(c)} className="p-2 text-[#3E3A36] hover:bg-[#FAF8F5] rounded-full transition-colors"><Edit2 size={16}/></button>
                   <button onClick={() => handleDelete(c.id)} className="p-2 text-red-400 hover:bg-red-50 rounded-full transition-colors"><Trash2 size={16}/></button>
                 </div>

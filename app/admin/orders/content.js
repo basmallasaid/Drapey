@@ -150,7 +150,7 @@ export default function OrdersContent({ orders }) {
                   {/* Expanded Detail View */}
                   {expanded === o.id && (
                     <tr>
-                      <td colSpan={6} className="px-8 py-8 bg-[#FAF8F5]/50 border-b border-[#EBE2DA]">
+                      <td colSpan={6} className="px-4 py-6 sm:px-8 sm:py-8 bg-[#FAF8F5]/50 border-b border-[#EBE2DA]">
                         <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
                           {/* Items List */}
                           <div className="lg:col-span-2 space-y-4">
@@ -159,15 +159,15 @@ export default function OrdersContent({ orders }) {
                             </h4>
                             <div className="bg-white rounded-2xl border border-[#EBE2DA] overflow-hidden">
                               {o.order_items?.map((item, i) => (
-                                <div key={i} className="p-4 flex items-center justify-between border-b border-[#FAF8F5] last:border-0">
-                                  <div className="flex items-center gap-4">
-                                    <div className="w-10 h-10 bg-[#F3EFEA] rounded-lg flex items-center justify-center text-[10px] font-bold">IMG</div>
-                                    <div>
-                                      <p className="text-sm font-bold text-[#3E3A36]">{item.product_name}</p>
+                                <div key={i} className="p-4 flex flex-wrap items-center justify-between gap-3 border-b border-[#FAF8F5] last:border-0">
+                                  <div className="flex items-center gap-4 min-w-0">
+                                    <div className="w-10 h-10 bg-[#F3EFEA] rounded-lg flex items-center justify-center text-[10px] font-bold shrink-0">IMG</div>
+                                    <div className="min-w-0">
+                                      <p className="text-sm font-bold text-[#3E3A36] truncate">{item.product_name}</p>
                                       <p className="text-[10px] text-[#8E8A84]">{item.size} / {item.color} · Qty: {item.quantity}</p>
                                     </div>
                                   </div>
-                                  <span className="font-bold text-sm">EGP {item.total_price?.toLocaleString()}</span>
+                                  <span className="font-bold text-sm ml-auto">EGP {item.total_price?.toLocaleString()}</span>
                                 </div>
                               ))}
                               <div className="p-4 bg-[#F3EFEA]/30 space-y-1">
