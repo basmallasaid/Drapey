@@ -25,8 +25,7 @@ export default function AdminLayout({ children }) {
     <div className="flex min-h-screen bg-[#FAF8F5] text-[#3E3A36]">
       {/* Sidebar */}
       <aside className="w-64 bg-white border-r border-[#EBE2DA] flex flex-col fixed h-full">
-        <div className="p-8">
-          <h1 className="text-2xl font-serif tracking-[0.2em] font-bold text-[#3E3A36]">DRAPEY</h1>
+        <div className="p-8"> <img src="/logo.jpeg" alt="DRAPEY" className="w-25 h-auto object-contain"/>
           <p className="text-[10px] text-[#8E8A84] tracking-[0.1em] italic mt-1 uppercase">Grace in Every Fold</p>
         </div>
 

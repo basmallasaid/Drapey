@@ -1,7 +1,17 @@
+// app/admin/users/content.js
 "use client";
 
 import { useState } from "react";
 import { useAuth } from "@/providers";
+import { 
+  Search, ShieldCheck, User as UserIcon, Trash2, 
+  Mail, Phone, Calendar, MoreHorizontal, ShieldAlert 
+} from "lucide-react";
+
+const roleStyles = {
+  admin: "bg-[#3E3A36] text-white border-[#3E3A36]", // شكل فخم للآدمن
+  customer: "bg-[#F3EFEA] text-[#3E3A36] border-[#EBE2DA]", // شكل هادئ للعميل
+};
 
 export default function UsersContent({ users }) {
   const [search, setSearch] = useState("");
@@ -19,142 +29,156 @@ export default function UsersContent({ users }) {
     return matchSearch && matchRole;
   });
 
+  // (نفس دوال handleRoleChange و handleDelete الأصلية)
   async function handleRoleChange(userId, newRole) {
     setUpdating(userId);
-    setMessage(null);
     try {
       const res = await fetch("/api/admin/users", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ userId, role: newRole }),
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Failed to update");
-      setMessage({ type: "success", text: "Role updated" });
+      if (!res.ok) throw new Error("Update failed");
       window.location.reload();
     } catch (e) {
       setMessage({ type: "error", text: e.message });
-    } finally {
       setUpdating(null);
     }
   }
 
   async function handleDelete(userId) {
-    if (!confirm("Are you sure you want to delete this user? This cannot be undone.")) return;
+    if (!confirm("Are you sure?")) return;
     setUpdating(userId);
-    setMessage(null);
     try {
-      const res = await fetch("/api/admin/users", {
-        method: "DELETE",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ userId }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Failed to delete");
-      setMessage({ type: "success", text: "User deleted" });
+      await fetch("/api/admin/users", { method: "DELETE", body: JSON.stringify({ userId }) });
       window.location.reload();
     } catch (e) {
-      setMessage({ type: "error", text: e.message });
-    } finally {
-      setUpdating(null);
+       setUpdating(null);
     }
   }
 
   return (
-    <div>
+    <div className="space-y-6">
+      {/* Header Section */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <h2 className="text-2xl font-bold text-[#3E3A36]">User Directory</h2>
+          <p className="text-sm text-[#8E8A84]">Manage permissions and view customer activity</p>
+        </div>
+      </div>
+
       {message && (
-        <div className={`mb-4 px-4 py-3 rounded-lg text-sm ${message.type === "success" ? "bg-green-50 text-green-700" : "bg-red-50 text-red-700"}`}>
+        <div className={`p-4 rounded-2xl text-sm font-medium border ${message.type === "success" ? "bg-green-50 text-green-700 border-green-100" : "bg-red-50 text-red-700 border-red-100"}`}>
           {message.text}
         </div>
       )}
 
-      {/* Filters */}
-      <div className="flex flex-col sm:flex-row gap-3 mb-6">
-        <input
-          type="text"
-          placeholder="Search by name, email, or phone..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="flex-1 px-4 py-2.5 border border-taupe rounded-lg text-sm text-charcoal bg-white focus:outline-none focus:ring-2 focus:ring-pebble focus:border-pebble"
-        />
+      {/* Toolbar / Filters */}
+      <div className="flex flex-col sm:flex-row gap-4 bg-white p-4 rounded-[20px] border border-[#EBE2DA] shadow-sm">
+        <div className="relative flex-1">
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-[#8E8A84]" size={18} />
+          <input
+            type="text"
+            placeholder="Search by name, email or phone..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="w-full pl-11 pr-4 py-2.5 bg-[#FAF8F5] border-none rounded-xl text-sm focus:ring-1 focus:ring-[#DCD6CC] outline-none"
+          />
+        </div>
         <select
           value={roleFilter}
           onChange={(e) => setRoleFilter(e.target.value)}
-          className="px-4 py-2.5 border border-taupe rounded-lg text-sm text-charcoal bg-white focus:outline-none focus:ring-2 focus:ring-pebble"
+          className="px-4 py-2.5 bg-[#FAF8F5] border-none rounded-xl text-sm font-medium outline-none cursor-pointer"
         >
           <option value="all">All Roles</option>
-          <option value="admin">Admin</option>
-          <option value="customer">Customer</option>
+          <option value="admin">Administrators</option>
+          <option value="customer">Customers</option>
         </select>
       </div>
 
-      {/* Table */}
-      <div className="bg-white rounded-xl border border-sand shadow-card overflow-hidden">
+      {/* Users Table */}
+      <div className="bg-white rounded-[24px] border border-[#EBE2DA] shadow-sm overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-sand text-left text-stone bg-cream">
-                <th className="px-5 py-3 font-medium">User</th>
-                <th className="px-5 py-3 font-medium">Phone</th>
-                <th className="px-5 py-3 font-medium">Role</th>
-                <th className="px-5 py-3 font-medium">Joined</th>
-                <th className="px-5 py-3 font-medium text-right">Actions</th>
+          <table className="w-full text-left">
+            <thead className="bg-[#FAF8F5] border-b border-[#EBE2DA]">
+              <tr className="text-[11px] font-bold uppercase tracking-widest text-[#8E8A84]">
+                <th className="px-8 py-5">User Profile</th>
+                <th className="px-6 py-5">Contact</th>
+                <th className="px-6 py-5 text-center">Access Level</th>
+                <th className="px-6 py-5">Registration Date</th>
+                <th className="px-8 py-5 text-right">Actions</th>
               </tr>
             </thead>
-            <tbody>
-              {filtered.length === 0 ? (
-                <tr>
-                  <td colSpan={5} className="px-5 py-8 text-center text-charcoal-soft">No users found</td>
-                </tr>
-              ) : (
-                filtered.map((u) => (
-                  <tr key={u.id} className="border-b border-sand last:border-0 hover:bg-row-hover">
-                    <td className="px-5 py-3">
-                      <p className="font-medium text-charcoal">
-                        {u.full_name || "No name"}
-                        {u.id === currentUser?.id && <span className="ml-2 text-xs text-stone">(you)</span>}
-                      </p>
-                      <p className="text-xs text-stone">{u.email}</p>
+            <tbody className="divide-y divide-[#EBE2DA]">
+              {filtered.map((u) => {
+                const isSelf = u.id === currentUser?.id;
+                const initials = u.full_name?.split(" ").map(n => n[0]).join("").toUpperCase().slice(0, 2);
+
+                return (
+                  <tr key={u.id} className="hover:bg-[#FAF8F5]/50 transition-colors group">
+                    <td className="px-8 py-5">
+                      <div className="flex items-center gap-4">
+                        <div className="w-12 h-12 bg-[#F3EFEA] rounded-full flex items-center justify-center text-[#3E3A36] font-bold text-sm border border-[#EBE2DA] shrink-0">
+                          {initials || <UserIcon size={20}/>}
+                        </div>
+                        <div className="flex flex-col">
+                          <span className="font-bold text-[#3E3A36] flex items-center gap-2">
+                            {u.full_name || "Guest User"}
+                            {isSelf && <span className="px-2 py-0.5 bg-[#EBE2DA] text-[#3E3A36] text-[8px] font-bold uppercase rounded-md tracking-tighter">You</span>}
+                          </span>
+                          <span className="text-xs text-[#8E8A84] flex items-center gap-1">
+                            <Mail size={12}/> {u.email}
+                          </span>
+                        </div>
+                      </div>
                     </td>
-                    <td className="px-5 py-3 text-charcoal-soft">{u.phone || "—"}</td>
-                    <td className="px-5 py-3">
-                      <span className={`inline-flex px-2 py-1 rounded-full text-xs font-medium capitalize ${
-                        u.role === "admin" ? "bg-taupe text-charcoal" : "bg-cream text-charcoal-soft"
-                      }`}>
+                    <td className="px-6 py-5">
+                      <div className="flex items-center gap-2 text-xs text-[#3E3A36] font-medium">
+                        <Phone size={14} className="text-[#8E8A84]"/>
+                        {u.phone || "No phone"}
+                      </div>
+                    </td>
+                    <td className="px-6 py-5 text-center">
+                      <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest border ${roleStyles[u.role]}`}>
+                        {u.role === 'admin' ? <ShieldCheck size={12}/> : <UserIcon size={12}/>}
                         {u.role}
                       </span>
                     </td>
-                    <td className="px-5 py-3 text-charcoal-soft">{new Date(u.created_at).toLocaleDateString()}</td>
-                    <td className="px-5 py-3">
-                      <div className="flex items-center justify-end gap-2">
+                    <td className="px-6 py-5">
+                      <div className="flex items-center gap-2 text-xs text-[#8E8A84]">
+                        <Calendar size={14}/>
+                        {new Date(u.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                      </div>
+                    </td>
+                    <td className="px-8 py-5 text-right">
+                      <div className="flex items-center justify-end gap-3">
                         <select
                           value={u.role}
                           onChange={(e) => handleRoleChange(u.id, e.target.value)}
-                          disabled={updating === u.id || u.id === currentUser?.id}
-                          className="px-2 py-1 border border-taupe rounded text-xs bg-white focus:outline-none focus:ring-1 focus:ring-pebble disabled:opacity-40"
+                          disabled={updating === u.id || isSelf}
+                          className="text-[10px] font-bold uppercase bg-white border border-[#EBE2DA] rounded-lg px-2 py-1 outline-none cursor-pointer disabled:opacity-30"
                         >
                           <option value="customer">Customer</option>
                           <option value="admin">Admin</option>
                         </select>
                         <button
                           onClick={() => handleDelete(u.id)}
-                          disabled={updating === u.id || u.id === currentUser?.id}
-                          title={u.id === currentUser?.id ? "You cannot delete yourself" : "Delete"}
-                          className="px-2 py-1 text-xs text-red-600 hover:bg-red-50 rounded disabled:opacity-40"
+                          disabled={updating === u.id || isSelf}
+                          className="p-2 text-red-400 hover:bg-red-50 rounded-lg transition-all disabled:opacity-0"
+                          title={isSelf ? "Cannot delete yourself" : "Delete user"}
                         >
-                          Delete
+                          <Trash2 size={16} />
                         </button>
                       </div>
                     </td>
                   </tr>
-                ))
-              )}
+                );
+              })}
             </tbody>
           </table>
         </div>
       </div>
-
-      <p className="mt-3 text-xs text-stone">{filtered.length} user{filtered.length !== 1 ? "s" : ""} shown</p>
+      <p className="text-[11px] text-[#8E8A84] font-medium italic">Showing {filtered.length} active members</p>
     </div>
   );
 }

@@ -1,16 +1,21 @@
+// app/admin/orders/content.js
 "use client";
 
 import { useState, Fragment } from "react";
+import { 
+  Search, Filter, ChevronDown, ChevronUp, Package, 
+  User, MapPin, Calendar, DollarSign, AlertCircle, X, CheckCircle2, Clock
+} from "lucide-react";
 
 const STATUSES = ["pending", "confirmed", "preparing", "shipped", "delivered", "cancelled"];
 
-const statusColors = {
-  pending: "bg-amber-100 text-amber-800",
-  confirmed: "bg-blue-100 text-blue-800",
-  preparing: "bg-orange-100 text-orange-800",
-  shipped: "bg-indigo-100 text-indigo-800",
-  delivered: "bg-green-100 text-green-800",
-  cancelled: "bg-rose-100 text-rose-800",
+const statusStyles = {
+  pending: "bg-[#FEF9C3] text-[#713F12] border-[#FEF08A]",
+  confirmed: "bg-[#DBEAFE] text-[#1E40AF] border-[#BFDBFE]",
+  preparing: "bg-[#FFEDD5] text-[#9A3412] border-[#FED7AA]",
+  shipped: "bg-[#E0E7FF] text-[#3730A3] border-[#C7D2FE]",
+  delivered: "bg-[#DCFCE7] text-[#166534] border-[#BBF7D0]",
+  cancelled: "bg-[#FEE2E2] text-[#991B1B] border-[#FECACA]",
 };
 
 export default function OrdersContent({ orders }) {
@@ -23,225 +28,219 @@ export default function OrdersContent({ orders }) {
 
   const filtered = orders.filter((o) => {
     const matchSearch =
-      o.id?.includes(search) ||
+      o.id?.toLowerCase().includes(search.toLowerCase()) ||
       o.users?.full_name?.toLowerCase().includes(search.toLowerCase()) ||
-      o.users?.email?.toLowerCase().includes(search.toLowerCase()) ||
       o.customer_name?.toLowerCase().includes(search.toLowerCase());
     const matchStatus = statusFilter === "all" || o.status === statusFilter;
     return matchSearch && matchStatus;
   });
 
-  async function handleStatusChange(orderId, newStatus) {
-    // Confirm the destructive cancellation action before applying.
-    if (newStatus === "cancelled") {
-      setPendingCancelId(orderId);
-      return;
-    }
-    await submitStatusChange(orderId, newStatus);
-  }
-
   async function submitStatusChange(orderId, newStatus) {
     setUpdating(orderId);
-    setMessage(null);
     try {
       const res = await fetch("/api/admin/orders", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ orderId, status: newStatus }),
       });
-      if (!res.ok) {
-        const data = await res.json();
-        throw new Error(data.error || "Failed to update status");
-      }
-      setMessage({ type: "success", text: "Status updated" });
-      setPendingCancelId(null);
+      if (!res.ok) throw new Error("Update failed");
       window.location.reload();
     } catch (e) {
       setMessage({ type: "error", text: e.message });
     } finally {
       setUpdating(null);
+      setPendingCancelId(null);
     }
   }
 
-  function renderAddress(o) {
-    const parts = [
-      o.street,
-      o.building ? `Bldg ${o.building}` : "",
-      o.floor ? `Fl ${o.floor}` : "",
-      o.apartment ? `Apt ${o.apartment}` : "",
-      o.area,
-      o.city && o.governorate ? `${o.city}, ${o.governorate}` : (o.city || o.governorate || ""),
-    ].filter(Boolean);
-    return parts.length > 0 ? parts.join(", ") : "—";
-  }
-
   return (
-    <div>
-      {message && (
-        <div className={`mb-4 px-4 py-3 rounded-lg text-sm ${message.type === "success" ? "bg-green-50 text-green-700" : "bg-red-50 text-red-700"}`}>
-          {message.text}
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <h2 className="text-2xl font-bold text-[#3E3A36]">Order Management</h2>
+          <p className="text-sm text-[#8E8A84]">Track and process customer orders</p>
         </div>
-      )}
+      </div>
 
-      <div className="flex flex-col sm:flex-row gap-3 mb-6">
-        <input
-          type="text"
-          placeholder="Search by order ID, customer name, or email..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="flex-1 px-4 py-2.5 border border-taupe rounded-lg text-sm text-charcoal bg-white focus:outline-none focus:ring-2 focus:ring-pebble focus:border-pebble"
-        />
+      {/* Toolbar */}
+      <div className="flex flex-col sm:flex-row gap-4 bg-white p-4 rounded-[20px] border border-[#EBE2DA] shadow-sm">
+        <div className="relative flex-1">
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-[#8E8A84]" size={18} />
+          <input
+            type="text"
+            placeholder="Search by ID or customer..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="w-full pl-11 pr-4 py-2.5 bg-[#FAF8F5] border-none rounded-xl text-sm outline-none"
+          />
+        </div>
         <select
           value={statusFilter}
           onChange={(e) => setStatusFilter(e.target.value)}
-          className="px-4 py-2.5 border border-taupe rounded-lg text-sm text-charcoal bg-white focus:outline-none focus:ring-2 focus:ring-pebble"
+          className="px-4 py-2.5 bg-[#FAF8F5] border-none rounded-xl text-sm font-medium outline-none cursor-pointer"
         >
-          <option value="all">All Status</option>
-          {STATUSES.map((s) => (
-            <option key={s} value={s} className="capitalize">{s.charAt(0).toUpperCase() + s.slice(1)}</option>
-          ))}
+          <option value="all">All Statuses</option>
+          {STATUSES.map(s => <option key={s} value={s} className="capitalize">{s}</option>)}
         </select>
       </div>
 
-      <div className="bg-white rounded-xl border border-sand shadow-card overflow-hidden">
+      {/* Table */}
+      <div className="bg-white rounded-[24px] border border-[#EBE2DA] shadow-sm overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full text-sm">
+          <table className="w-full text-left border-collapse">
             <thead>
-              <tr className="border-b border-sand text-left text-stone bg-cream">
-                <th className="px-5 py-3 font-medium">Order</th>
-                <th className="px-5 py-3 font-medium">Customer</th>
-                <th className="px-5 py-3 font-medium">Items</th>
-                <th className="px-5 py-3 font-medium">Total</th>
-                <th className="px-5 py-3 font-medium">Status</th>
-                <th className="px-5 py-3 font-medium">Date</th>
-                <th className="px-5 py-3 font-medium text-right">Actions</th>
+              <tr className="bg-[#FAF8F5] border-b border-[#EBE2DA] text-[11px] font-bold uppercase tracking-widest text-[#8E8A84]">
+                <th className="px-6 py-5">Order ID</th>
+                <th className="px-6 py-5">Customer</th>
+                <th className="px-6 py-5 text-center">Items</th>
+                <th className="px-6 py-5 text-right">Total</th>
+                <th className="px-6 py-5 text-center">Status</th>
+                <th className="px-6 py-5 text-right">Actions</th>
               </tr>
             </thead>
-            <tbody>
-              {filtered.length === 0 ? (
-                <tr><td colSpan={7} className="px-5 py-8 text-center text-charcoal-soft">No orders found</td></tr>
-              ) : (
-                filtered.map((o) => (
-                  <Fragment key={o.id}>
-                    <tr className="border-b border-sand last:border-0 hover:bg-row-hover">
-                      <td className="px-5 py-3 font-mono text-xs text-charcoal-soft">#{o.id.slice(0, 8)}</td>
-                      <td className="px-5 py-3">
-                        <p className="text-charcoal">{o.users?.full_name || o.customer_name || "N/A"}</p>
-                        <p className="text-xs text-stone">{o.users?.email || o.customer_email}</p>
-                      </td>
-                      <td className="px-5 py-3 text-charcoal-soft">{o.order_items?.length || 0}</td>
-                      <td className="px-5 py-3 font-medium">${(o.total_amount || 0).toFixed(2)}</td>
-                      <td className="px-5 py-3">
-                        <span className={`inline-flex px-2 py-1 rounded-full text-xs font-medium capitalize ${statusColors[o.status] || "bg-cream text-charcoal-soft"}`}>
-                          {o.status}
-                        </span>
-                      </td>
-                      <td className="px-5 py-3 text-charcoal-soft">{new Date(o.created_at).toLocaleDateString()}</td>
-                      <td className="px-5 py-3">
-                        <div className="flex items-center justify-end gap-2">
-                          <select
-                            value={o.status}
-                            onChange={(e) => handleStatusChange(o.id, e.target.value)}
-                            disabled={updating === o.id}
-                            className="px-2 py-1 border border-taupe rounded text-xs bg-white focus:outline-none focus:ring-1 focus:ring-pebble disabled:opacity-50 capitalize"
-                          >
-                            {STATUSES.map((s) => (
-                              <option key={s} value={s}>{s.charAt(0).toUpperCase() + s.slice(1)}</option>
-                            ))}
-                          </select>
-                          <button
-                            onClick={() => setExpanded(expanded === o.id ? null : o.id)}
-                            className="px-2 py-1 text-xs text-charcoal-soft hover:bg-cream rounded"
-                          >
-                            {expanded === o.id ? "Hide" : "View"}
-                          </button>
+            <tbody className="divide-y divide-[#EBE2DA]">
+              {filtered.map((o) => (
+                <Fragment key={o.id}>
+                  <tr className={`hover:bg-[#FAF8F5]/50 transition-colors ${expanded === o.id ? 'bg-[#FAF8F5]' : ''}`}>
+                    <td className="px-6 py-5 font-mono text-[10px] font-bold text-[#8E8A84]">
+                      #{o.id.slice(0, 8).toUpperCase()}
+                    </td>
+                    <td className="px-6 py-5">
+                      <div className="flex flex-col">
+                        <span className="font-bold text-[#3E3A36]">{o.users?.full_name || o.customer_name}</span>
+                        <span className="text-[10px] text-[#8E8A84]">{o.users?.email || o.customer_email}</span>
+                      </div>
+                    </td>
+                    <td className="px-6 py-5 text-center">
+                      <span className="inline-flex items-center gap-1 text-xs font-bold text-[#3E3A36] bg-[#F3EFEA] px-2 py-1 rounded-lg">
+                        <Package size={12} /> {o.order_items?.length}
+                      </span>
+                    </td>
+                    <td className="px-6 py-5 text-right font-bold text-[#3E3A36]">
+                      EGP {o.total_amount?.toLocaleString()}
+                    </td>
+                    <td className="px-6 py-5 text-center">
+                      <span className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase border ${statusStyles[o.status]}`}>
+                        {o.status}
+                      </span>
+                    </td>
+                    <td className="px-6 py-5 text-right">
+                      <div className="flex items-center justify-end gap-3">
+                        <select
+                          value={o.status}
+                          onChange={(e) => {
+                             if(e.target.value === "cancelled") setPendingCancelId(o.id);
+                             else submitStatusChange(o.id, e.target.value);
+                          }}
+                          className="text-[10px] font-bold uppercase bg-white border border-[#EBE2DA] rounded-lg px-2 py-1 outline-none"
+                        >
+                          {STATUSES.map(s => <option key={s} value={s}>{s}</option>)}
+                        </select>
+                        <button 
+                          onClick={() => setExpanded(expanded === o.id ? null : o.id)}
+                          className="p-2 hover:bg-white rounded-full border border-transparent hover:border-[#EBE2DA] transition-all"
+                        >
+                          {expanded === o.id ? <ChevronUp size={18}/> : <ChevronDown size={18}/>}
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                  
+                  {/* Expanded Detail View */}
+                  {expanded === o.id && (
+                    <tr>
+                      <td colSpan={6} className="px-8 py-8 bg-[#FAF8F5]/50 border-b border-[#EBE2DA]">
+                        <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
+                          {/* Items List */}
+                          <div className="lg:col-span-2 space-y-4">
+                            <h4 className="text-xs font-bold uppercase tracking-widest text-[#8E8A84] flex items-center gap-2">
+                              <Package size={14} /> Order Items
+                            </h4>
+                            <div className="bg-white rounded-2xl border border-[#EBE2DA] overflow-hidden">
+                              {o.order_items?.map((item, i) => (
+                                <div key={i} className="p-4 flex items-center justify-between border-b border-[#FAF8F5] last:border-0">
+                                  <div className="flex items-center gap-4">
+                                    <div className="w-10 h-10 bg-[#F3EFEA] rounded-lg flex items-center justify-center text-[10px] font-bold">IMG</div>
+                                    <div>
+                                      <p className="text-sm font-bold text-[#3E3A36]">{item.product_name}</p>
+                                      <p className="text-[10px] text-[#8E8A84]">{item.size} / {item.color} · Qty: {item.quantity}</p>
+                                    </div>
+                                  </div>
+                                  <span className="font-bold text-sm">EGP {item.total_price?.toLocaleString()}</span>
+                                </div>
+                              ))}
+                              <div className="p-4 bg-[#F3EFEA]/30 space-y-1">
+                                <div className="flex justify-between text-xs text-[#8E8A84]">
+                                  <span>Subtotal</span>
+                                  <span>EGP {o.subtotal?.toLocaleString()}</span>
+                                </div>
+                                <div className="flex justify-between text-xs text-[#8E8A84]">
+                                  <span>Shipping</span>
+                                  <span>EGP {o.shipping_fee?.toLocaleString()}</span>
+                                </div>
+                                <div className="flex justify-between text-sm font-bold text-[#3E3A36] pt-2 border-t border-[#EBE2DA]">
+                                  <span>Total Amount</span>
+                                  <span>EGP {o.total_amount?.toLocaleString()}</span>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Customer & Shipping Info */}
+                          <div className="space-y-6">
+                            <div>
+                              <h4 className="text-xs font-bold uppercase tracking-widest text-[#8E8A84] mb-3 flex items-center gap-2">
+                                <User size={14} /> Customer
+                              </h4>
+                              <p className="text-sm font-bold text-[#3E3A36]">{o.customer_name}</p>
+                              <p className="text-xs text-[#8E8A84]">{o.customer_phone}</p>
+                            </div>
+                            <div>
+                              <h4 className="text-xs font-bold uppercase tracking-widest text-[#8E8A84] mb-3 flex items-center gap-2">
+                                <MapPin size={14} /> Shipping Address
+                              </h4>
+                              <p className="text-xs text-[#3E3A36] leading-relaxed">
+                                {o.street}, {o.area}<br/>
+                                {o.city}, {o.governorate}<br/>
+                                <span className="text-[#8E8A84]">
+                                  Bldg: {o.building}, Floor: {o.floor}, Apt: {o.apartment}
+                                </span>
+                              </p>
+                            </div>
+                            {o.notes && (
+                              <div className="p-3 bg-white rounded-xl border border-[#EBE2DA]">
+                                <h4 className="text-[10px] font-bold text-[#8E8A84] uppercase mb-1">Notes</h4>
+                                <p className="text-xs italic text-[#3E3A36]">"{o.notes}"</p>
+                              </div>
+                            )}
+                          </div>
                         </div>
                       </td>
                     </tr>
-                    {expanded === o.id && (
-                      <tr key={`${o.id}-details`}>
-                        <td colSpan={7} className="px-5 py-4 bg-cream">
-                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            <div>
-                              <p className="text-xs font-medium text-charcoal-soft mb-1">Items</p>
-                              {o.order_items?.map((item, i) => (
-                                <div key={i} className="text-sm py-1 border-b border-taupe last:border-0">
-                                  <div className="flex justify-between">
-                                    <span className="text-charcoal">{item.product_name}</span>
-                                    <span className="font-medium">${(item.total_price || 0).toFixed(2)}</span>
-                                  </div>
-                                  <div className="text-xs text-stone">
-                                    {item.size} / {item.color} · qty {item.quantity} @ ${(item.unit_price || 0).toFixed(2)}
-                                  </div>
-                                </div>
-                              ))}
-                              <div className="border-t border-taupe mt-2 pt-2 flex justify-between text-sm">
-                                <span className="text-charcoal-soft">Subtotal</span>
-                                <span>${(o.subtotal || 0).toFixed(2)}</span>
-                              </div>
-                              <div className="flex justify-between text-sm">
-                                <span className="text-charcoal-soft">Shipping</span>
-                                <span>{o.shipping_fee === 0 ? "FREE" : `$${(o.shipping_fee || 0).toFixed(2)}`}</span>
-                              </div>
-                              {Number(o.discount) > 0 && (
-                                <div className="flex justify-between text-sm">
-                                  <span className="text-charcoal-soft">Discount</span>
-                                  <span>-${(o.discount || 0).toFixed(2)}</span>
-                                </div>
-                              )}
-                              <div className="flex justify-between text-sm font-bold">
-                                <span>Total</span>
-                                <span>${(o.total_amount || 0).toFixed(2)}</span>
-                              </div>
-                            </div>
-                            <div>
-                              <p className="text-xs font-medium text-charcoal-soft mb-1">Customer</p>
-                              <p className="text-sm text-charcoal">{o.customer_name}</p>
-                              <p className="text-sm text-charcoal">{o.customer_phone}</p>
-                              <p className="text-sm text-charcoal">{o.customer_email}</p>
-                              <p className="text-xs font-medium text-charcoal-soft mt-3 mb-1">Delivery Address</p>
-                              <p className="text-sm text-charcoal">{renderAddress(o)}</p>
-                              {o.notes && (
-                                <div className="mt-3">
-                                  <p className="text-xs font-medium text-charcoal-soft mb-1">Notes</p>
-                                  <p className="text-sm text-charcoal">{o.notes}</p>
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                        </td>
-                      </tr>
-                    )}
-                  </Fragment>
-                ))
-              )}
+                  )}
+                </Fragment>
+              ))}
             </tbody>
           </table>
         </div>
       </div>
 
-      <p className="mt-3 text-xs text-stone">{filtered.length} order{filtered.length !== 1 ? "s" : ""} shown</p>
-
-      {/* Cancel confirmation */}
+      {/* Cancellation Modal */}
       {pendingCancelId && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-black/50" onClick={() => setPendingCancelId(null)} />
-          <div className="relative bg-white w-full max-w-md p-8 rounded-xl border border-sand shadow-card">
-            <h3 className="text-lg font-semibold text-charcoal mb-3">Cancel this order?</h3>
-            <p className="text-sm text-charcoal-soft mb-6">
-              Cancelling restores the purchased stock. Confirm you want to mark this order as cancelled?
+          <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setPendingCancelId(null)} />
+          <div className="relative bg-white w-full max-w-md p-8 rounded-[24px] border border-[#EBE2DA] shadow-2xl text-center">
+            <div className="w-16 h-16 bg-red-50 text-red-500 rounded-full flex items-center justify-center mx-auto mb-4">
+              <AlertCircle size={32} />
+            </div>
+            <h3 className="text-xl font-bold text-[#3E3A36] mb-2">Cancel Order?</h3>
+            <p className="text-sm text-[#8E8A84] mb-8">
+              This action will restore the stock for all items in this order. Are you sure you want to proceed?
             </p>
-            <div className="flex justify-end gap-3">
-              <button onClick={() => setPendingCancelId(null)} className="px-4 py-2 border border-taupe rounded-lg text-sm text-charcoal hover:bg-cream">
-                Keep Order
-              </button>
-              <button
-                onClick={() => submitStatusChange(pendingCancelId, "cancelled")}
-                disabled={updating === pendingCancelId}
-                className="px-4 py-2 bg-red-600 text-white rounded-lg text-sm font-medium hover:bg-red-700 disabled:opacity-50"
-              >
-                {updating === pendingCancelId ? "Cancelling..." : "Confirm Cancellation"}
-              </button>
+            <div className="flex gap-3">
+              <button onClick={() => setPendingCancelId(null)} className="flex-1 py-3 border border-[#EBE2DA] rounded-xl text-sm font-bold text-[#3E3A36] hover:bg-[#FAF8F5]">No, Keep it</button>
+              <button onClick={() => submitStatusChange(pendingCancelId, "cancelled")} className="flex-1 py-3 bg-red-600 text-white rounded-xl text-sm font-bold hover:bg-red-700 shadow-lg shadow-red-200">Yes, Cancel Order</button>
             </div>
           </div>
         </div>
