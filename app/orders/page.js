@@ -17,6 +17,8 @@ const STATUS_COLORS = {
   cancelled: 'bg-red-100 text-red-800',
 };
 
+const CANCELLABLE_STATUSES = new Set(['pending', 'confirmed']);
+
 export default function OrdersPage() {
   const { user } = useAuth();
   const router = useRouter();
@@ -24,6 +26,10 @@ export default function OrdersPage() {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [expandedId, setExpandedId] = useState(null);
+  const [confirmId, setConfirmId] = useState(null);
+  const [cancellingId, setCancellingId] = useState(null);
+  const [cancelError, setCancelError] = useState('');
+  const [successMessage, setSuccessMessage] = useState('');
 
   useEffect(() => {
     if (!user) {
@@ -45,6 +51,41 @@ export default function OrdersPage() {
     fetchOrders();
   }, [user, supabase, router]);
 
+  const handleCancel = async () => {
+    if (!confirmId) return;
+    setCancellingId(confirmId);
+    setCancelError('');
+    setSuccessMessage('');
+
+    try {
+      const res = await fetch('/api/orders/cancel', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ orderId: confirmId }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        setCancelError(data.error || 'Failed to cancel order');
+        setCancellingId(null);
+        return;
+      }
+
+      // Update the order's status in local state so the UI reflects it immediately.
+      setOrders(prev => prev.map(o =>
+        o.id === confirmId ? { ...o, status: 'cancelled' } : o
+      ));
+      setSuccessMessage('Your order has been cancelled.');
+      setConfirmId(null);
+      setExpandedId(null);
+    } catch (err) {
+      setCancelError('Something went wrong. Please try again.');
+    } finally {
+      setCancellingId(null);
+    }
+  };
+
   if (loading) {
     return (
       <>
@@ -64,6 +105,16 @@ export default function OrdersPage() {
       </div>
 
       <div className="max-w-4xl mx-auto px-4 md:px-8 pb-20">
+        {successMessage && (
+          <div className="bg-green-50 border border-green-200 text-green-700 text-sm px-4 py-3 mb-6">
+            {successMessage}
+          </div>
+        )}
+        {cancelError && (
+          <div className="bg-red-50 border border-red-200 text-red-700 text-sm px-4 py-3 mb-6">
+            {cancelError}
+          </div>
+        )}
         {orders.length === 0 ? (
           <div className="text-center py-20">
             <h2 className="text-2xl font-serif mb-4">No orders yet</h2>
@@ -136,6 +187,21 @@ export default function OrdersPage() {
                         )}
                       </div>
                     </div>
+
+                    {CANCELLABLE_STATUSES.has(order.status) && (
+                      <div className="mt-6 flex justify-end border-t border-gray-100 pt-4">
+                        <button
+                          onClick={() => {
+                            setConfirmId(order.id);
+                            setCancelError('');
+                            setSuccessMessage('');
+                          }}
+                          className="border border-red-200 text-red-600 px-5 py-2.5 text-xs font-bold uppercase tracking-widest hover:bg-red-50 transition-colors"
+                        >
+                          Cancel Order
+                        </button>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
@@ -144,6 +210,42 @@ export default function OrdersPage() {
         )}
       </div>
       <Footer />
+
+      {confirmId && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div
+            className="absolute inset-0 bg-black/50"
+            onClick={() => {
+              if (!cancellingId) setConfirmId(null);
+            }}
+          />
+          <div className="relative bg-white w-full max-w-md p-8 animate-fadeIn">
+            <h3 className="text-lg font-serif font-medium mb-3">Cancel this order?</h3>
+            <p className="text-sm text-gray-600 mb-6">
+              Are you sure you want to cancel this order? This action cannot be undone.
+            </p>
+            {cancelError && (
+              <p className="text-sm text-red-600 mb-4">{cancelError}</p>
+            )}
+            <div className="flex justify-end gap-3">
+              <button
+                disabled={cancellingId === confirmId}
+                onClick={() => setConfirmId(null)}
+                className="px-5 py-2.5 text-xs font-bold uppercase tracking-widest border border-gray-200 hover:bg-gray-50 transition-colors disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                disabled={cancellingId === confirmId}
+                onClick={handleCancel}
+                className="px-5 py-2.5 text-xs font-bold uppercase tracking-widest bg-red-600 text-white hover:bg-red-700 transition-colors disabled:opacity-50"
+              >
+                {cancellingId === confirmId ? 'Cancelling...' : 'Confirm Cancellation'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }

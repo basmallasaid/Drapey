@@ -1,12 +1,14 @@
 "use client";
 
 import { useState } from "react";
+import { useAuth } from "@/providers";
 
 export default function UsersContent({ users }) {
   const [search, setSearch] = useState("");
   const [roleFilter, setRoleFilter] = useState("all");
   const [updating, setUpdating] = useState(null);
   const [message, setMessage] = useState(null);
+  const { user: currentUser } = useAuth();
 
   const filtered = users.filter((u) => {
     const matchSearch =
@@ -108,7 +110,10 @@ export default function UsersContent({ users }) {
                 filtered.map((u) => (
                   <tr key={u.id} className="border-b border-gray-50 last:border-0 hover:bg-gray-50">
                     <td className="px-5 py-3">
-                      <p className="font-medium text-gray-900">{u.full_name || "No name"}</p>
+                      <p className="font-medium text-gray-900">
+                        {u.full_name || "No name"}
+                        {u.id === currentUser?.id && <span className="ml-2 text-xs text-gray-400">(you)</span>}
+                      </p>
                       <p className="text-xs text-gray-400">{u.email}</p>
                     </td>
                     <td className="px-5 py-3 text-gray-600">{u.phone || "—"}</td>
@@ -125,16 +130,17 @@ export default function UsersContent({ users }) {
                         <select
                           value={u.role}
                           onChange={(e) => handleRoleChange(u.id, e.target.value)}
-                          disabled={updating === u.id}
-                          className="px-2 py-1 border border-gray-200 rounded text-xs focus:outline-none focus:ring-1 focus:ring-teal-500 disabled:opacity-50"
+                          disabled={updating === u.id || u.id === currentUser?.id}
+                          className="px-2 py-1 border border-gray-200 rounded text-xs focus:outline-none focus:ring-1 focus:ring-teal-500 disabled:opacity-40"
                         >
                           <option value="customer">Customer</option>
                           <option value="admin">Admin</option>
                         </select>
                         <button
                           onClick={() => handleDelete(u.id)}
-                          disabled={updating === u.id}
-                          className="px-2 py-1 text-xs text-red-600 hover:bg-red-50 rounded disabled:opacity-50"
+                          disabled={updating === u.id || u.id === currentUser?.id}
+                          title={u.id === currentUser?.id ? "You cannot delete yourself" : "Delete"}
+                          className="px-2 py-1 text-xs text-red-600 hover:bg-red-50 rounded disabled:opacity-40"
                         >
                           Delete
                         </button>

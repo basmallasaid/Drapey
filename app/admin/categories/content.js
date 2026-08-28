@@ -39,7 +39,7 @@ export default function CategoriesContent({ categories }) {
   }
 
   async function handleDelete(id) {
-    if (!confirm("Delete this category? Products in this category will become uncategorized.")) return;
+    if (!confirm("Delete this category? Categories that still have products cannot be deleted.")) return;
     try {
       const res = await fetch("/api/admin/categories", {
         method: "DELETE",
