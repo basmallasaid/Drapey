@@ -135,6 +135,7 @@ export default function CheckoutPage() {
   return (
     <>
       <Navbar />
+      <div className="pt-20">
       <div className="bg-[#f6f5f3] py-16 text-center mb-10 border-b border-gray-100">
         <h1 className="text-3xl md:text-5xl font-serif font-medium mb-4">Checkout</h1>
         <div className="flex justify-center items-center gap-2 text-xs uppercase tracking-widest font-bold text-gray-400">
@@ -251,6 +252,7 @@ export default function CheckoutPage() {
             </div>
           </div>
         </form>
+      </div>
       </div>
       <Footer />
     </>
