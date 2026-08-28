@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { adminResponse } from "@/lib/supabase/admin";
+import { normalizeSize } from "@/lib/sizes";
 
 // Builds an SKU distinct from (product_id, size, color) uniqueness.
 // Not strictly required (SKU is independent), but we derive stable, unique
@@ -9,6 +10,52 @@ function buildSku(productId, size, color) {
     .replace(/\s+/g, "-")
     .toUpperCase();
   return key.slice(0, 40);
+}
+
+// Normalizes + trims an incoming variant, returning null for invalid rows.
+function cleanVariant(v) {
+  if (!v || !v.size || !v.color) return null;
+  const size = normalizeSize(v.size);
+  const color = String(v.color).trim();
+  if (!size || !color) return null;
+  return {
+    size,
+    color,
+    stock_quantity: Number(v.stock_quantity) || 0,
+    sku: v.sku || null,
+  };
+}
+
+// Returns a friendly, specific message if any variant in `rows` is already
+// present in the DB for the given product, else null.
+async function findVariantConflict(supabase, productId, rows) {
+  if (!rows || rows.length === 0) return null;
+  const { data: existing } = await supabase
+    .from("product_variants")
+    .select("size, color")
+    .eq("product_id", productId);
+
+  const existingKeys = new Set(
+    (existing || []).map((v) => `${normalizeSize(v.size)}::${String(v.color).trim().toLowerCase()}`)
+  );
+
+  for (const v of rows) {
+    const key = `${v.size}::${v.color.toLowerCase()}`;
+    if (existingKeys.has(key)) {
+      return { row: v, error: `This size already exists for this product.` };
+    }
+  }
+  return null;
+}
+
+// Converts a Supabase/Postgres error into a friendly admin message, hiding
+// raw 23505 unique-violation details behind a generic, human-readable line.
+function friendlyError(err, fallback) {
+  if (!err) return fallback;
+  if (err.code === "23505") {
+    return "This value already exists. Please choose a different one.";
+  }
+  return err.message || fallback;
 }
 
 export async function POST(request) {
@@ -41,18 +88,43 @@ export async function POST(request) {
   // Insert variants (size, color, stock) — required for the storefront to work.
   if (Array.isArray(variants) && variants.length > 0) {
     const variantRows = variants
-      .filter((v) => v && v.size && v.color)
+      .map(cleanVariant)
+      .filter(Boolean)
       .map((v) => ({
         product_id: product.id,
-        size: String(v.size).trim(),
-        color: String(v.color).trim(),
+        size: v.size,
+        color: v.color,
         sku: v.sku || buildSku(product.id, v.size, v.color),
-        stock_quantity: Number(v.stock_quantity) || 0,
+        stock_quantity: v.stock_quantity,
       }));
+
+    // Server-side duplicate check (case-insensitive on the normalized size).
+    const conflict = await findVariantConflict(supabase, product.id, variantRows);
+    if (conflict) {
+      return NextResponse.json({ error: conflict.error }, { status: 409 });
+    }
+
+    // Reject duplicate combinations within the submitted set itself.
+    const seen = new Set();
+    for (const v of variantRows) {
+      const key = `${v.size}::${v.color.toLowerCase()}`;
+      if (seen.has(key)) {
+        return NextResponse.json(
+          { error: `This variant already exists for this product (${v.size} / ${v.color}).` },
+          { status: 409 }
+        );
+      }
+      seen.add(key);
+    }
 
     if (variantRows.length > 0) {
       const { error: vErr } = await supabase.from("product_variants").insert(variantRows);
-      if (vErr) return NextResponse.json({ error: `Variant error: ${vErr.message}` }, { status: 500 });
+      if (vErr) {
+        return NextResponse.json(
+          { error: friendlyError(vErr, `Variant error: ${vErr.message}`) },
+          { status: vErr.code === "23505" ? 409 : 500 }
+        );
+      }
     }
   }
 
@@ -107,25 +179,45 @@ export async function PATCH(request) {
   // This is intentional for the edit flow — the admin submits the full
   // current variant list, so old removed combos are dropped and new ones added.
   if (Array.isArray(variants)) {
+    const cleaned = variants.map(cleanVariant).filter(Boolean);
+
+    // Reject duplicate combinations within the submitted set (the DB's
+    // UNIQUE(product_id, size, color) backstops this, but failing fast here
+    // gives a clear message before any data is deleted).
+    const seen = new Set();
+    for (const v of cleaned) {
+      const key = `${v.size}::${v.color.toLowerCase()}`;
+      if (seen.has(key)) {
+        return NextResponse.json(
+          { error: `This variant already exists for this product (${v.size} / ${v.color}).` },
+          { status: 409 }
+        );
+      }
+      seen.add(key);
+    }
+
     const { error: delVErr } = await supabase
       .from("product_variants")
       .delete()
       .eq("product_id", id);
     if (delVErr) return NextResponse.json({ error: delVErr.message }, { status: 500 });
 
-    const variantRows = variants
-      .filter((v) => v && v.size && v.color)
-      .map((v) => ({
-        product_id: id,
-        size: String(v.size).trim(),
-        color: String(v.color).trim(),
-        sku: v.sku || buildSku(id, v.size, v.color),
-        stock_quantity: Number(v.stock_quantity) || 0,
-      }));
+    const variantRows = cleaned.map((v) => ({
+      product_id: id,
+      size: v.size,
+      color: v.color,
+      sku: v.sku || buildSku(id, v.size, v.color),
+      stock_quantity: v.stock_quantity,
+    }));
 
     if (variantRows.length > 0) {
       const { error: addVErr } = await supabase.from("product_variants").insert(variantRows);
-      if (addVErr) return NextResponse.json({ error: `Variant error: ${addVErr.message}` }, { status: 500 });
+      if (addVErr) {
+        return NextResponse.json(
+          { error: friendlyError(addVErr, `Variant error: ${addVErr.message}`) },
+          { status: addVErr.code === "23505" ? 409 : 500 }
+        );
+      }
     }
   }
 
