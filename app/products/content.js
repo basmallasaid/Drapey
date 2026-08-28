@@ -100,16 +100,17 @@ export default function ProductsPageContent() {
   return (
     <>
       <Navbar />
-      <div className="bg-[#f6f5f3] py-16 text-center mb-10">
-        <h1 className="text-3xl md:text-5xl font-serif font-medium mb-4">Shop</h1>
-        <div className="flex justify-center items-center gap-2 text-xs uppercase tracking-widest font-bold text-gray-400">
-          <a href="/" className="hover:text-black transition-colors">Home</a>
-          <span>/</span>
-          <span className="text-black">Shop</span>
+      <div className="pt-20">
+        <div className="bg-[#f6f5f3] py-16 text-center mb-10">
+          <h1 className="text-3xl md:text-5xl font-serif font-medium mb-4">Shop</h1>
+          <div className="flex justify-center items-center gap-2 text-xs uppercase tracking-widest font-bold text-gray-400">
+            <a href="/" className="hover:text-black transition-colors">Home</a>
+            <span>/</span>
+            <span className="text-black">Shop</span>
+          </div>
         </div>
-      </div>
 
-      <div className="max-w-7xl mx-auto px-4 md:px-8 pb-20">
+        <div className="max-w-7xl mx-auto px-4 md:px-8 pb-20">
         <div className="grid grid-cols-1 md:grid-cols-12 gap-8">
           {/* Sidebar */}
           <div className="md:col-span-3">
@@ -148,6 +149,7 @@ export default function ProductsPageContent() {
             </div>
           </div>
         </div>
+      </div>
       </div>
       <Footer />
     </>

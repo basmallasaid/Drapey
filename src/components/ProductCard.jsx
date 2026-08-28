@@ -42,13 +42,13 @@ const ProductCard = ({ product }) => {
         onMouseLeave={() => setIsHovered(false)}
       >
         {/* Image container */}
-        <div className="relative w-full overflow-hidden bg-gray-50 rounded-sm cursor-pointer h-72 flex items-center justify-center">
+        <div className="relative w-full overflow-hidden cursor-pointer h-[280px] sm:h-[300px] md:h-72 flex items-center justify-center">
           {primaryImage ? (
             <>
               <img
                 src={primaryImage.image_url}
                 alt={product.name}
-                className={`w-4/5 h-auto object-contain mix-blend-multiply transition-all duration-700 ${
+                className={`w-8/9 h-full object-contain mix-blend-multiply transition-all duration-700 ${
                   isHovered && secondImage ? 'opacity-0' : 'opacity-100 scale-100'
                 } ${isHovered ? 'scale-105' : ''}`}
               />
@@ -56,7 +56,7 @@ const ProductCard = ({ product }) => {
                 <img
                   src={secondImage.image_url}
                   alt={product.name}
-                  className={`absolute inset-0 w-4/5 h-auto object-contain mix-blend-multiply mx-auto my-auto transition-all duration-700 ${
+                  className={`absolute inset-0 w-8/9 h-full object-contain mix-blend-multiply mx-auto my-auto transition-all duration-700 ${
                     isHovered ? 'opacity-100 scale-105' : 'opacity-0'
                   }`}
                 />

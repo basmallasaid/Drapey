@@ -1,7 +1,4 @@
 {
-  "/api/admin/products/route": "app/api/admin/products/route.js",
-  "/page": "app/page.js",
-  "/product/[id]/page": "app/product/[id]/page.js",
-  "/admin/products/page": "app/admin/products/page.js",
-  "/admin/page": "app/admin/page.js"
+  "/favorites/page": "app/favorites/page.js",
+  "/page": "app/page.js"
 }

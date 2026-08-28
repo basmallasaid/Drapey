@@ -33,6 +33,7 @@ export default function FavoritesPage() {
   return (
     <>
       <Navbar />
+      <div className="pt-20">
       <div className="bg-[#f6f5f3] py-16 mb-10 border-b border-gray-100">
         <h1 className="text-3xl md:text-5xl font-serif font-medium text-center mb-4">Wishlist</h1>
         <div className="flex justify-center items-center gap-2 text-xs uppercase tracking-widest font-bold text-gray-400">
@@ -75,6 +76,7 @@ export default function FavoritesPage() {
             </div>
           </div>
         )}
+      </div>
       </div>
       <Footer />
     </>

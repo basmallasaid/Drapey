@@ -37,25 +37,31 @@ export default async function HomePage() {
       <Navbar />
       <main>
         {/* Hero */}
-        <section className="bg-[#f6f5f3] py-24 md:py-32">
-          <div className="max-w-7xl mx-auto px-4 md:px-8 text-center">
-            <span className="text-[10px] font-bold tracking-[4px] uppercase text-gray-400 block mb-6">
-              New Collection
-            </span>
-            <h1 className="text-4xl md:text-6xl font-serif font-medium mb-6 text-gray-900">
-              Clean Lines,<br />Calm Tones
-            </h1>
-            <p className="text-gray-500 text-sm md:text-base max-w-md mx-auto mb-10 leading-relaxed">
-              Essential clothing designed for everyday comfort. Minimal, timeless, made to last.
-            </p>
-            <Link
-              href="/products"
-              className="inline-block bg-black text-white px-10 py-4 text-xs font-bold uppercase tracking-[2px] hover:bg-gray-800 transition-colors"
-            >
-              Shop Now
-            </Link>
-          </div>
-        </section>
+<section
+  className="bg-cover bg-center min-h-[90vh] md:min-h-[100vh] flex items-center"
+  style={{ backgroundImage: "url('/slider01.jpg')" }}
+>
+  <div className="max-w-7xl mx-auto w-full px-4 md:px-8 text-center text-white">
+    <span className="text-xs md:text-sm font-bold tracking-[4px] uppercase block mb-6">
+      New Collection
+    </span>
+
+    <h1 className="text-5xl md:text-7xl lg:text-8xl font-serif font-medium mb-6">
+      Clean Lines,<br />Calm Tones
+    </h1>
+
+    <p className="text-base md:text-lg max-w-xl mx-auto mb-10 leading-relaxed">
+      Essential clothing designed for everyday comfort. Minimal, timeless, made to last.
+    </p>
+
+    <Link
+      href="/products"
+      className="inline-block bg-black text-white px-10 py-4 text-sm font-bold uppercase tracking-[2px] hover:bg-gray-800 transition-colors"
+    >
+      Shop Now
+    </Link>
+  </div>
+</section>
 
         {/* Categories */}
         {categories.length > 0 && (

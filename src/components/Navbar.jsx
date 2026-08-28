@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useAuth, useCart, useFav } from '../../providers';
@@ -12,8 +12,19 @@ const Navbar = () => {
   const pathname = usePathname();
   const router = useRouter();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setScrolled(window.scrollY > 10);
+    };
+    handleScroll();
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   const isActive = (path) => pathname === path;
+  const isHome = pathname === '/';
 
   const navLinks = [
     { name: 'Home', path: '/' },
@@ -23,13 +34,21 @@ const Navbar = () => {
   ];
 
   return (
-    <nav className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-gray-100 shadow-sm">
+  <nav
+  className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
+    scrolled || !isHome
+      ? "bg-white border-b border-gray-100 shadow-sm"
+      : "bg-transparent border-b border-transparent "
+  }`}
+>
       <div className="max-w-7xl mx-auto px-4 md:px-8">
         <div className="flex justify-between items-center h-16 md:h-20">
           {/* Mobile menu button */}
           <button
             onClick={() => setMobileOpen(!mobileOpen)}
-            className="md:hidden p-2 -ml-2 text-gray-600 hover:text-black"
+            className={`md:hidden p-2 -ml-2 transition-colors duration-300 ${
+              scrolled || !isHome ? 'text-gray-600 hover:text-black' : 'text-white hover:text-gray-200'
+            }`}
           >
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               {mobileOpen ? (
@@ -59,7 +78,15 @@ const Navbar = () => {
                   key={link.name}
                   href={link.path}
                   className={`text-xs font-bold tracking-widest uppercase transition-all duration-300 pb-1 border-b-2
-                    ${isActive(link.path) ? 'text-black border-black' : 'text-gray-500 border-transparent hover:text-black'}`}
+                    ${
+                      scrolled || !isHome
+                        ? isActive(link.path)
+                          ? 'text-black border-black'
+                          : 'text-gray-500 border-transparent hover:text-black'
+                        : isActive(link.path)
+                        ? 'text-white border-white'
+                        : 'text-white border-transparent hover:text-gray-200'
+                    }`}
                 >
                   {link.name}
                 </Link>
@@ -71,20 +98,26 @@ const Navbar = () => {
           <div className="flex items-center space-x-2 md:space-x-4">
             {user ? (
               <div className="hidden md:flex items-center space-x-3 border-l border-gray-200 pl-4 ml-2">
-                <span className="text-[10px] font-bold tracking-widest uppercase text-gray-500">
+                <span className={`text-[10px] font-bold tracking-widest uppercase transition-colors duration-300 ${
+                  scrolled || !isHome ? 'text-gray-500' : 'text-white'
+                }`}>
                   {profile?.full_name || user.email?.split('@')[0]}
                 </span>
                 {profile?.role === 'admin' && (
-                  <Link href="/admin" className="text-[10px] font-bold tracking-widest uppercase text-teal-600 hover:text-teal-800 transition-colors">
+                  <Link href="/admin" className={`text-[10px] font-bold tracking-widest uppercase transition-colors duration-300 ${
+                    scrolled || !isHome ? 'text-teal-600 hover:text-teal-800' : 'text-white hover:text-gray-200'
+                  }`}>
                     Admin
                   </Link>
                 )}
-                <Link href="/profile" className="text-[10px] font-bold tracking-widest uppercase text-gray-400 hover:text-black transition-colors">
+                <Link href="/profile" className={`text-[10px] font-bold tracking-widest uppercase transition-colors duration-300 ${
+                  scrolled || !isHome ? 'text-gray-400 hover:text-black' : 'text-white hover:text-gray-200'
+                }`}>
                   Profile
                 </Link>
                 <button
                   onClick={logout}
-                  className="text-[10px] font-bold tracking-widest uppercase text-red-500 hover:text-red-700 transition-colors"
+                  className={`text-[10px] font-bold tracking-widest uppercase transition-colors duration-300 text-red-500 hover:text-red-700`}
                 >
                   Logout
                 </button>
@@ -92,7 +125,9 @@ const Navbar = () => {
             ) : (
               <button
                 onClick={() => router.push('/login')}
-                className="p-2 text-gray-500 hover:text-black transition-colors"
+                className={`p-2 transition-colors duration-300 ${
+                  scrolled || !isHome ? 'text-gray-500 hover:text-black' : 'text-white hover:text-gray-200'
+                }`}
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
@@ -100,7 +135,9 @@ const Navbar = () => {
               </button>
             )}
 
-            <Link href="/favorites" className="p-2 text-gray-500 hover:text-black transition-colors relative">
+            <Link href="/favorites" className={`p-2 transition-colors duration-300 relative ${
+              scrolled || !isHome ? 'text-gray-500 hover:text-black' : 'text-white hover:text-gray-200'
+            }`}>
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
               </svg>
@@ -111,7 +148,9 @@ const Navbar = () => {
               )}
             </Link>
 
-            <Link href="/cart" className="p-2 text-gray-500 hover:text-black transition-colors relative">
+            <Link href="/cart" className={`p-2 transition-colors duration-300 relative ${
+              scrolled || !isHome ? 'text-gray-500 hover:text-black' : 'text-white hover:text-gray-200'
+            }`}>
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
               </svg>

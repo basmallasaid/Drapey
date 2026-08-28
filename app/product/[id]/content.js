@@ -101,7 +101,7 @@ export default function ProductPageContent() {
   return (
     <>
       <Navbar />
-      <div className="min-h-screen bg-white pb-20">
+      <div className="min-h-screen bg-white pb-20 pt-20">
         {/* Breadcrumb */}
         <div className="bg-[#f6f5f3] py-4 border-b border-gray-100">
           <div className="max-w-7xl mx-auto px-6 flex items-center gap-2 text-[10px] md:text-xs uppercase tracking-widest font-bold text-gray-400">
@@ -121,12 +121,12 @@ export default function ProductPageContent() {
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 xl:gap-20">
             {/* Images */}
             <div className="lg:col-span-7 space-y-6">
-              <div className="aspect-[4/5] bg-[#f9f9f9] flex items-center justify-center overflow-hidden rounded-sm">
+              <div className="aspect-[4/5] flex items-center justify-center overflow-hidden">
                 {images.length > 0 ? (
                   <img
                     src={images[activeImage]?.image_url}
                     alt={product.name}
-                    className="w-4/5 h-auto object-contain mix-blend-multiply transition-transform duration-700 hover:scale-105"
+                    className="w-2/3 h-auto object-cover mix-blend-multiply transition-transform duration-700 hover:scale-105"
                   />
                 ) : (
                   <span className="text-gray-300">No Image</span>

@@ -43,6 +43,7 @@ export default function ProfilePage() {
   return (
     <>
       <Navbar />
+      <div className="pt-20">
       <div className="bg-[#f6f5f3] py-16 text-center mb-10 border-b border-gray-100">
         <h1 className="text-3xl md:text-5xl font-serif font-medium mb-4">Profile</h1>
       </div>
@@ -94,6 +95,7 @@ export default function ProfilePage() {
             Logout
           </button>
         </div>
+      </div>
       </div>
       <Footer />
     </>

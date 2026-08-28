@@ -15,7 +15,7 @@ export default function CartPage() {
   return (
     <>
       <Navbar />
-      <div className="min-h-screen bg-white pb-24">
+      <div className="min-h-screen bg-white pb-24 pt-20">
         <div className="bg-[#f6f5f3] py-16 text-center mb-12 border-b border-[#eee]">
           <h1 className="text-3xl md:text-5xl font-serif font-medium tracking-wide mb-4">Cart</h1>
           <div className="flex justify-center items-center gap-2 text-xs uppercase tracking-widest font-semibold text-gray-400">
