@@ -1,135 +1,70 @@
 'use client';
+import { useState, useEffect } from 'react';
 
-import { useState } from 'react';
-
-const FilterAccordion = ({ title, children, defaultOpen = true }) => {
+const FilterSection = ({ title, children, defaultOpen = true }) => {
   const [isOpen, setIsOpen] = useState(defaultOpen);
-
   return (
-    <div>
-      <button
-        onClick={() => setIsOpen(!isOpen)}
-        className="flex justify-between items-center w-full mb-3"
-      >
-        <span className="text-xs font-bold tracking-widest uppercase">{title}</span>
-        <svg
-          className={`w-4 h-4 transition-transform ${isOpen ? 'rotate-180' : ''}`}
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
+    <div className="border-b border-light-beige pb-6 mb-6 last:border-0 last:pb-0 last:mb-0">
+      <button onClick={() => setIsOpen(!isOpen)} className="flex justify-between items-center w-full group">
+        <h4 className="text-[10px] font-bold uppercase tracking-[4px] text-dark-brown group-hover:text-tan transition-colors">{title}</h4>
+        <svg className={`w-3 h-3 text-medium-brown transition-transform duration-500 ${isOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
         </svg>
       </button>
-      {isOpen && <div className="space-y-1">{children}</div>}
+      <div className={`mt-6 transition-all duration-500 overflow-hidden ${isOpen ? 'max-h-[500px] opacity-100' : 'max-h-0 opacity-0'}`}>
+        {children}
+      </div>
     </div>
   );
 };
 
-const FilterSidebar = ({
-  categories,
-  selectedCategory,
-  setSelectedCategory,
-  priceRange,
-  setPriceRange,
-  maxPrice = 200,
-  sizes,
-  selectedSize,
-  setSelectedSize,
-  colors,
-  selectedColor,
-  setSelectedColor,
-  getCount,
-}) => {
+export default function FilterSidebar({ categories, selectedCategory, setSelectedCategory, priceRange, setPriceRange, maxPrice, colors, selectedColor, setSelectedColor, getCount }) {
+  const [localPrice, setLocalPrice] = useState(priceRange[1]);
+
+  useEffect(() => { setLocalPrice(priceRange[1]); }, [priceRange]);
+
   return (
-    <div className="space-y-6 pr-0 md:pr-6">
-      {/* Categories */}
-      <FilterAccordion title="Categories">
-        <button
-          onClick={() => setSelectedCategory('all')}
-          className={`block w-full text-left py-1.5 text-sm transition-colors ${
-            selectedCategory === 'all' ? 'text-black font-bold' : 'text-gray-500 hover:text-black'
-          }`}
-        >
-          All [{getCount('all')}]
-        </button>
-        {categories.map((cat) => (
-          <button
-            key={cat.slug}
-            onClick={() => setSelectedCategory(cat.slug)}
-            className={`block w-full text-left py-1.5 flex justify-between items-center text-sm transition-colors ${
-              selectedCategory === cat.slug ? 'text-black font-bold' : 'text-gray-500 hover:text-black'
-            }`}
-          >
-            <span>{cat.name}</span>
-            <span className="text-xs text-gray-400">[{getCount(cat.slug)}]</span>
+    <div className="space-y-2">
+      <FilterSection title="Collections">
+        <div className="flex flex-col space-y-3">
+          <button onClick={() => setSelectedCategory('all')} className={`text-[10px] uppercase tracking-widest flex justify-between items-center ${selectedCategory === 'all' ? 'text-tan font-black' : 'text-medium-brown hover:text-dark-brown'}`}>
+            All Products <span>[{getCount('all')}]</span>
           </button>
-        ))}
-      </FilterAccordion>
-
-      <hr className="border-gray-100" />
-
-      {/* Price Range */}
-      <FilterAccordion title="Price">
-        <div className="px-1 pt-2">
-          <input
-            type="range"
-            min={0}
-            max={maxPrice}
-            value={priceRange[1]}
-            onChange={(e) => setPriceRange([priceRange[0], Number(e.target.value)])}
-            className="w-full accent-black"
-          />
-          <p className="text-sm text-gray-600 mt-2">
-            ${priceRange[0]} — ${priceRange[1]}
-          </p>
+          {categories.map(cat => (
+            <button key={cat.slug} onClick={() => setSelectedCategory(cat.slug)} className={`text-[10px] uppercase tracking-widest flex justify-between items-center ${selectedCategory === cat.slug ? 'text-tan font-black' : 'text-medium-brown hover:text-dark-brown'}`}>
+              {cat.name} <span>[{getCount(cat.slug)}]</span>
+            </button>
+          ))}
         </div>
-      </FilterAccordion>
+      </FilterSection>
 
-      <hr className="border-gray-100" />
+      <FilterSection title="Price Filter">
+        <div className="px-1">
+          <input 
+            type="range" min={0} max={maxPrice || 2000} value={localPrice} 
+            onChange={(e) => setLocalPrice(Number(e.target.value))}
+            onMouseUp={() => setPriceRange([0, localPrice])} 
+            onTouchEnd={() => setPriceRange([0, localPrice])}
+            className="w-full accent-tan h-1 bg-light-beige rounded-lg appearance-none cursor-pointer"
+          />
+          <div className="flex justify-between mt-4 text-[10px] font-bold tracking-widest text-dark-brown">
+            <span>$0.00</span><span className="text-tan">${localPrice}.00</span>
+          </div>
+        </div>
+      </FilterSection>
 
-      {/* Sizes */}
-      {sizes.length > 0 && (
-        <>
-          <FilterAccordion title="Size">
-            {sizes.map((size) => (
-              <button
-                key={size}
-                onClick={() => setSelectedSize(selectedSize === size ? 'all' : size)}
-                className={`block w-full text-left py-1.5 text-sm transition-colors ${
-                  selectedSize === size ? 'text-black font-bold' : 'text-gray-500 hover:text-black'
-                }`}
-              >
-                {size}
-              </button>
-            ))}
-          </FilterAccordion>
-          <hr className="border-gray-100" />
-        </>
-      )}
-
-      {/* Colors */}
       {colors.length > 0 && (
-        <FilterAccordion title="Color">
-          <div className="flex flex-wrap gap-2 pt-1">
-            {colors.map((color) => (
-              <button
-                key={color}
-                onClick={() => setSelectedColor(selectedColor === color ? 'all' : color)}
-                className={`w-7 h-7 rounded-full border-2 transition-all ${
-                  selectedColor === color
-                    ? 'border-black scale-110 ring-2 ring-gray-200'
-                    : 'border-gray-200 hover:scale-110'
-                }`}
+        <FilterSection title="Color Palette">
+          <div className="flex flex-wrap gap-2.5">
+            {colors.map(color => (
+              <button key={color} onClick={() => setSelectedColor(selectedColor === color ? 'all' : color)} 
+                className={`w-6 h-6 rounded-full border border-light-beige transition-all ring-offset-2 ${selectedColor === color ? 'ring-2 ring-tan scale-110' : 'hover:scale-110'}`}
                 style={{ backgroundColor: color }}
-                title={color}
               />
             ))}
           </div>
-        </FilterAccordion>
+        </FilterSection>
       )}
     </div>
   );
-};
-
-export default FilterSidebar;
+}

@@ -1,4 +1,4 @@
-// app/admin/users/content.js
+﻿// app/admin/users/content.js
 "use client";
 
 import { useState } from "react";
@@ -10,8 +10,8 @@ import {
 } from "lucide-react";
 
 const roleStyles = {
-  admin: "bg-[#3E3A36] text-white border-[#3E3A36]", // شكل فخم للآدمن
-  customer: "bg-[#F3EFEA] text-[#3E3A36] border-[#EBE2DA]", // شكل هادئ للعميل
+  admin: "bg-[var(--color-dark-brown)] text-white border-[var(--color-dark-brown)]", // Ø´ÙƒÙ„ ÙØ®Ù… Ù„Ù„Ø¢Ø¯Ù…Ù†
+  customer: "bg-[var(--color-light-beige)] text-[var(--color-dark-brown)] border-[var(--color-light-beige)]", // Ø´ÙƒÙ„ Ù‡Ø§Ø¯Ø¦ Ù„Ù„Ø¹Ù…ÙŠÙ„
 };
 
 export default function UsersContent({ users }) {
@@ -30,7 +30,7 @@ export default function UsersContent({ users }) {
     return matchSearch && matchRole;
   });
 
-  // (نفس دوال handleRoleChange و handleDelete الأصلية)
+  // (Ù†ÙØ³ Ø¯ÙˆØ§Ù„ handleRoleChange Ùˆ handleDelete Ø§Ù„Ø£ØµÙ„ÙŠØ©)
   async function handleRoleChange(userId, newRole) {
     setUpdating(userId);
     try {
@@ -83,27 +83,27 @@ export default function UsersContent({ users }) {
       {/* Header Section */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h2 className="text-2xl font-bold text-[#3E3A36]">User Directory</h2>
-          <p className="text-sm text-[#8E8A84]">Manage permissions and view customer activity</p>
+          <h2 className="text-2xl font-bold text-[var(--color-dark-brown)]">User Directory</h2>
+          <p className="text-sm text-[var(--color-medium-brown)]">Manage permissions and view customer activity</p>
         </div>
       </div>
 
       {/* Toolbar / Filters */}
-      <div className="flex flex-col sm:flex-row gap-4 bg-white p-4 rounded-[20px] border border-[#EBE2DA] shadow-sm">
+      <div className="flex flex-col sm:flex-row gap-4 bg-white p-4 rounded-[20px] border border-[var(--color-light-beige)] shadow-sm">
         <div className="relative flex-1">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-[#8E8A84]" size={18} />
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--color-medium-brown)]" size={18} />
           <input
             type="text"
             placeholder="Search by name, email or phone..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-11 pr-4 py-2.5 bg-[#FAF8F5] border-none rounded-xl text-sm focus:ring-1 focus:ring-[#DCD6CC] outline-none"
+            className="w-full pl-11 pr-4 py-2.5 bg-[var(--color-cream)] border-none rounded-xl text-sm focus:ring-1 focus:ring-[var(--color-tan)] outline-none"
           />
         </div>
         <select
           value={roleFilter}
           onChange={(e) => setRoleFilter(e.target.value)}
-          className="px-4 py-2.5 bg-[#FAF8F5] border-none rounded-xl text-sm font-medium outline-none cursor-pointer"
+          className="px-4 py-2.5 bg-[var(--color-cream)] border-none rounded-xl text-sm font-medium outline-none cursor-pointer"
         >
           <option value="all">All Roles</option>
           <option value="admin">Administrators</option>
@@ -112,11 +112,11 @@ export default function UsersContent({ users }) {
       </div>
 
       {/* Users Table */}
-      <div className="bg-white rounded-[24px] border border-[#EBE2DA] shadow-sm overflow-hidden">
+      <div className="bg-white rounded-[24px] border border-[var(--color-light-beige)] shadow-sm overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left">
-            <thead className="bg-[#FAF8F5] border-b border-[#EBE2DA]">
-              <tr className="text-[11px] font-bold uppercase tracking-widest text-[#8E8A84]">
+            <thead className="bg-[var(--color-cream)] border-b border-[var(--color-light-beige)]">
+              <tr className="text-[11px] font-bold uppercase tracking-widest text-[var(--color-medium-brown)]">
                 <th className="px-8 py-5">User Profile</th>
                 <th className="px-6 py-5">Contact</th>
                 <th className="px-6 py-5 text-center">Access Level</th>
@@ -124,32 +124,32 @@ export default function UsersContent({ users }) {
                 <th className="px-8 py-5 text-right">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-[#EBE2DA]">
+            <tbody className="divide-y divide-[var(--color-light-beige)]">
               {filtered.map((u) => {
                 const isSelf = u.id === currentUser?.id;
                 const initials = u.full_name?.split(" ").map(n => n[0]).join("").toUpperCase().slice(0, 2);
 
                 return (
-                  <tr key={u.id} className="hover:bg-[#FAF8F5]/50 transition-colors group">
+                  <tr key={u.id} className="hover:bg-[var(--color-cream)]/50 transition-colors group">
                     <td className="px-8 py-5">
                       <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 bg-[#F3EFEA] rounded-full flex items-center justify-center text-[#3E3A36] font-bold text-sm border border-[#EBE2DA] shrink-0">
+                        <div className="w-12 h-12 bg-[var(--color-light-beige)] rounded-full flex items-center justify-center text-[var(--color-dark-brown)] font-bold text-sm border border-[var(--color-light-beige)] shrink-0">
                           {initials || <UserIcon size={20}/>}
                         </div>
                         <div className="flex flex-col">
-                          <span className="font-bold text-[#3E3A36] flex items-center gap-2">
+                          <span className="font-bold text-[var(--color-dark-brown)] flex items-center gap-2">
                             {u.full_name || "Guest User"}
-                            {isSelf && <span className="px-2 py-0.5 bg-[#EBE2DA] text-[#3E3A36] text-[8px] font-bold uppercase rounded-md tracking-tighter">You</span>}
+                            {isSelf && <span className="px-2 py-0.5 bg-[var(--color-light-beige)] text-[var(--color-dark-brown)] text-[8px] font-bold uppercase rounded-md tracking-tighter">You</span>}
                           </span>
-                          <span className="text-xs text-[#8E8A84] flex items-center gap-1">
+                          <span className="text-xs text-[var(--color-medium-brown)] flex items-center gap-1">
                             <Mail size={12}/> {u.email}
                           </span>
                         </div>
                       </div>
                     </td>
                     <td className="px-6 py-5">
-                      <div className="flex items-center gap-2 text-xs text-[#3E3A36] font-medium">
-                        <Phone size={14} className="text-[#8E8A84]"/>
+                      <div className="flex items-center gap-2 text-xs text-[var(--color-dark-brown)] font-medium">
+                        <Phone size={14} className="text-[var(--color-medium-brown)]"/>
                         {u.phone || "No phone"}
                       </div>
                     </td>
@@ -160,7 +160,7 @@ export default function UsersContent({ users }) {
                       </span>
                     </td>
                     <td className="px-6 py-5">
-                      <div className="flex items-center gap-2 text-xs text-[#8E8A84]">
+                      <div className="flex items-center gap-2 text-xs text-[var(--color-medium-brown)]">
                         <Calendar size={14}/>
                         {new Date(u.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
                       </div>
@@ -171,7 +171,7 @@ export default function UsersContent({ users }) {
                           value={u.role}
                           onChange={(e) => handleRoleChange(u.id, e.target.value)}
                           disabled={updating === u.id || isSelf}
-                          className="text-[10px] font-bold uppercase bg-white border border-[#EBE2DA] rounded-lg px-2 py-1 outline-none cursor-pointer disabled:opacity-30"
+                          className="text-[10px] font-bold uppercase bg-white border border-[var(--color-light-beige)] rounded-lg px-2 py-1 outline-none cursor-pointer disabled:opacity-30"
                         >
                           <option value="customer">Customer</option>
                           <option value="admin">Admin</option>
@@ -197,7 +197,7 @@ export default function UsersContent({ users }) {
           </table>
         </div>
       </div>
-      <p className="text-[11px] text-[#8E8A84] font-medium italic">Showing {filtered.length} active members</p>
+      <p className="text-[11px] text-[var(--color-medium-brown)] font-medium italic">Showing {filtered.length} active members</p>
     </div>
   );
 }

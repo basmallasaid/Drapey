@@ -6,8 +6,7 @@ import Link from 'next/link';
 import { useAuth } from '../../providers';
 import { createClient } from '@/lib/supabase/client';
 import { showToast, showError, confirmAction } from '@/lib/sweetalert';
-import Navbar from '../../src/components/Navbar';
-import Footer from '../../src/components/FooterWrapper';
+
 
 export default function AddressesPage() {
   const { user } = useAuth();
@@ -105,9 +104,8 @@ export default function AddressesPage() {
   if (loading) {
     return (
       <>
-        <Navbar />
         <div className="flex justify-center items-center min-h-[60vh]">
-          <div className="w-8 h-8 border-2 border-gray-300 border-t-black rounded-full animate-spin" />
+          <div className="w-8 h-8 border-2 border-light-beige border-t-tan rounded-full animate-spin" />
         </div>
       </>
     );
@@ -115,9 +113,8 @@ export default function AddressesPage() {
 
   return (
     <>
-      <Navbar />
       <div className="pt-20">
-      <div className="bg-[#f6f5f3] py-16 text-center mb-10 border-b border-gray-100">
+      <div className="bg-cream py-16 text-center mb-10 border-b border-light-beige">
         <h1 className="text-3xl md:text-5xl font-serif font-medium mb-4">Addresses</h1>
       </div>
 
@@ -130,34 +127,34 @@ export default function AddressesPage() {
 
         <button
           onClick={() => { resetForm(); setShowForm(true); }}
-          className="bg-black text-white px-6 py-3 text-xs font-bold uppercase tracking-widest hover:bg-gray-800 transition-colors mb-8"
+          className="bg-dark-brown text-white px-6 py-3 text-xs font-bold uppercase tracking-widest hover:bg-tan transition-colors mb-8"
         >
           + Add New Address
         </button>
 
         {showForm && (
-          <form onSubmit={handleSave} className="border border-gray-100 p-6 mb-8 animate-fadeIn">
+          <form onSubmit={handleSave} className="border border-light-beige p-6 mb-8 animate-fadeIn">
             <h2 className="text-xs font-bold uppercase tracking-widest mb-6">{editingId ? 'Edit Address' : 'New Address'}</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <input name="full_name" value={form.full_name} onChange={handleChange} required placeholder="Full Name" className="border border-gray-200 px-4 py-3 text-sm outline-none focus:border-black transition-colors" />
-              <input name="phone" value={form.phone} onChange={handleChange} required placeholder="Phone" className="border border-gray-200 px-4 py-3 text-sm outline-none focus:border-black transition-colors" />
-              <input name="governorate" value={form.governorate} onChange={handleChange} required placeholder="Governorate" className="border border-gray-200 px-4 py-3 text-sm outline-none focus:border-black transition-colors" />
-              <input name="city" value={form.city} onChange={handleChange} required placeholder="City" className="border border-gray-200 px-4 py-3 text-sm outline-none focus:border-black transition-colors" />
-              <input name="area" value={form.area} onChange={handleChange} placeholder="Area" className="border border-gray-200 px-4 py-3 text-sm outline-none focus:border-black transition-colors" />
-              <input name="street" value={form.street} onChange={handleChange} required placeholder="Street" className="border border-gray-200 px-4 py-3 text-sm outline-none focus:border-black transition-colors" />
-              <input name="building" value={form.building} onChange={handleChange} placeholder="Building" className="border border-gray-200 px-4 py-3 text-sm outline-none focus:border-black transition-colors" />
-              <input name="floor" value={form.floor} onChange={handleChange} placeholder="Floor" className="border border-gray-200 px-4 py-3 text-sm outline-none focus:border-black transition-colors" />
-              <input name="apartment" value={form.apartment} onChange={handleChange} placeholder="Apartment" className="border border-gray-200 px-4 py-3 text-sm outline-none focus:border-black transition-colors" />
+              <input name="full_name" value={form.full_name} onChange={handleChange} required placeholder="Full Name" className="border border-light-beige px-4 py-3 text-sm outline-none focus:border-tan transition-colors" />
+              <input name="phone" value={form.phone} onChange={handleChange} required placeholder="Phone" className="border border-light-beige px-4 py-3 text-sm outline-none focus:border-tan transition-colors" />
+              <input name="governorate" value={form.governorate} onChange={handleChange} required placeholder="Governorate" className="border border-light-beige px-4 py-3 text-sm outline-none focus:border-tan transition-colors" />
+              <input name="city" value={form.city} onChange={handleChange} required placeholder="City" className="border border-light-beige px-4 py-3 text-sm outline-none focus:border-tan transition-colors" />
+              <input name="area" value={form.area} onChange={handleChange} placeholder="Area" className="border border-light-beige px-4 py-3 text-sm outline-none focus:border-tan transition-colors" />
+              <input name="street" value={form.street} onChange={handleChange} required placeholder="Street" className="border border-light-beige px-4 py-3 text-sm outline-none focus:border-tan transition-colors" />
+              <input name="building" value={form.building} onChange={handleChange} placeholder="Building" className="border border-light-beige px-4 py-3 text-sm outline-none focus:border-tan transition-colors" />
+              <input name="floor" value={form.floor} onChange={handleChange} placeholder="Floor" className="border border-light-beige px-4 py-3 text-sm outline-none focus:border-tan transition-colors" />
+              <input name="apartment" value={form.apartment} onChange={handleChange} placeholder="Apartment" className="border border-light-beige px-4 py-3 text-sm outline-none focus:border-tan transition-colors" />
             </div>
             <label className="flex items-center gap-2 mt-4 cursor-pointer">
-              <input type="checkbox" name="is_default" checked={form.is_default} onChange={handleChange} className="accent-black" />
+              <input type="checkbox" name="is_default" checked={form.is_default} onChange={handleChange} className="accent-tan" />
               <span className="text-sm">Set as default</span>
             </label>
             <div className="flex gap-3 mt-6">
-              <button type="submit" className="bg-black text-white px-6 py-3 text-xs font-bold uppercase tracking-widest hover:bg-gray-800 transition-colors">
+              <button type="submit" className="bg-dark-brown text-white px-6 py-3 text-xs font-bold uppercase tracking-widest hover:bg-tan transition-colors">
                 {editingId ? 'Update' : 'Save'}
               </button>
-              <button type="button" onClick={resetForm} className="border border-gray-200 px-6 py-3 text-xs font-bold uppercase tracking-widest hover:bg-gray-50 transition-colors">
+              <button type="button" onClick={resetForm} className="border border-light-beige px-6 py-3 text-xs font-bold uppercase tracking-widest hover:bg-cream transition-colors">
                 Cancel
               </button>
             </div>
@@ -166,26 +163,25 @@ export default function AddressesPage() {
 
         <div className="space-y-4">
           {addresses.map((addr) => (
-            <div key={addr.id} className="border border-gray-100 p-6 flex justify-between items-start">
+            <div key={addr.id} className="border border-light-beige p-6 flex justify-between items-start">
               <div className="text-sm">
-                <p className="font-medium">{addr.full_name} — {addr.phone}</p>
-                <p className="text-gray-500 mt-1">{addr.street}{addr.building ? `, Bldg ${addr.building}` : ''}{addr.floor ? `, Fl ${addr.floor}` : ''}{addr.apartment ? `, Apt ${addr.apartment}` : ''}</p>
-                <p className="text-gray-500">{addr.city}, {addr.governorate}</p>
-                {addr.is_default && <span className="text-[10px] font-bold text-gray-400 uppercase mt-2 inline-block">Default</span>}
+                <p className="font-semibold text-dark-brown">{addr.full_name} — {addr.phone}</p>
+                <p className="text-medium-brown mt-1">{addr.street}{addr.building ? `, Bldg ${addr.building}` : ''}{addr.floor ? `, Fl ${addr.floor}` : ''}{addr.apartment ? `, Apt ${addr.apartment}` : ''}</p>
+                <p className="text-medium-brown">{addr.city}, {addr.governorate}</p>
+                {addr.is_default && <span className="text-[10px] font-bold text-tan uppercase mt-2 inline-block">Default</span>}
               </div>
               <div className="flex gap-2 shrink-0 ml-4">
-                <button onClick={() => handleEdit(addr)} className="text-xs font-bold text-gray-400 hover:text-black transition-colors">Edit</button>
+                <button onClick={() => handleEdit(addr)} className="text-xs font-bold text-medium-brown hover:text-tan transition-colors">Edit</button>
                 <button onClick={() => handleDelete(addr.id)} className="text-xs font-bold text-red-400 hover:text-red-600 transition-colors">Delete</button>
               </div>
             </div>
           ))}
           {addresses.length === 0 && !showForm && (
-            <p className="text-center text-gray-400 py-10">No addresses saved yet.</p>
+            <p className="text-center text-medium-brown py-10">No addresses saved yet.</p>
           )}
         </div>
       </div>
       </div>
-      <Footer />
     </>
   );
 }

@@ -1,4 +1,4 @@
-import { requireAdmin } from "@/lib/supabase/admin";
+﻿import { requireAdmin } from "@/lib/supabase/admin";
 import { redirect } from "next/navigation";
 import ProductsContent from "./content";
 

@@ -11,30 +11,50 @@ const Footer = async () => {
       .order('name');
     categories = data || [];
   } catch {
-    // Silently fail - footer will show without category links
+    // Silently fail
   }
 
   return (
-    <footer className="bg-white pt-16 pb-8 border-t border-gray-100">
+    <footer className="bg-white pt-24 pb-12 border-t border-light-beige">
       <div className="max-w-7xl mx-auto px-4 md:px-8">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 mb-12">
-          {/* Brand */}
-          <div className="lg:col-span-1">
-            <span className="text-2xl font-serif font-bold tracking-widest uppercase block mb-4">Drapey</span>
-            <p className="text-gray-500 text-sm leading-relaxed mb-4">
-              Clean silhouettes and calm tones. Essential clothing for everyday wear.
+        
+        {/* Main Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 lg:gap-8 mb-20">
+          
+          {/* Section 1: Brand Identity */}
+          <div className="space-y-6">
+            <Link href="/" className="text-3xl font-serif tracking-tighter text-dark-brown">
+              DRAPEY
+            </Link>
+            <p className="text-medium-brown text-[13px] leading-relaxed max-w-[240px] font-sans opacity-80">
+              Elevating everyday essentials through clean silhouettes and calm tones. 
+              Designed for the modern minimalist.
             </p>
-            <p className="text-gray-500 text-sm">hello@drapey.com</p>
+            <div className="flex gap-4 pt-2">
+              {/* Social Icons Placeholders */}
+              <a href="#" className="text-dark-brown hover:text-tan transition-colors">
+                <span className="text-[10px] font-bold tracking-widest uppercase">Instagram</span>
+              </a>
+              <a href="#" className="text-dark-brown hover:text-tan transition-colors">
+                <span className="text-[10px] font-bold tracking-widest uppercase">TikTok</span>
+              </a>
+            </div>
           </div>
 
-          {/* Quick Links */}
+          {/* Section 2: Shop & Categories */}
           <div>
-            <h3 className="text-xs font-bold tracking-widest uppercase mb-4">Quick Links</h3>
-            <ul className="space-y-3">
-              <li><Link href="/products" className="text-gray-500 text-sm hover:text-black transition-colors">Shop</Link></li>
+            <h3 className="text-[11px] font-bold tracking-[3px] uppercase mb-8 text-dark-brown">Collections</h3>
+            <ul className="space-y-4">
+              <li>
+                <Link href="/products" className="text-sm text-medium-brown hover:text-tan transition-all duration-300 flex items-center group">
+                  <span className="w-0 group-hover:w-3 h-[1px] bg-tan mr-0 group-hover:mr-2 transition-all"></span>
+                  Shop All
+                </Link>
+              </li>
               {categories.map((cat) => (
                 <li key={cat.slug}>
-                  <Link href={`/products?category=${cat.slug}`} className="text-gray-500 text-sm hover:text-black transition-colors">
+                  <Link href={`/products?category=${cat.slug}`} className="text-sm text-medium-brown hover:text-tan transition-all duration-300 flex items-center group">
+                    <span className="w-0 group-hover:w-3 h-[1px] bg-tan mr-0 group-hover:mr-2 transition-all"></span>
                     {cat.name}
                   </Link>
                 </li>
@@ -42,34 +62,55 @@ const Footer = async () => {
             </ul>
           </div>
 
-          {/* Account */}
+          {/* Section 3: Customer Care */}
           <div>
-            <h3 className="text-xs font-bold tracking-widest uppercase mb-4">Account</h3>
-            <ul className="space-y-3">
-              <li><Link href="/profile" className="text-gray-500 text-sm hover:text-black transition-colors">Profile</Link></li>
-              <li><Link href="/orders" className="text-gray-500 text-sm hover:text-black transition-colors">Orders</Link></li>
-              <li><Link href="/favorites" className="text-gray-500 text-sm hover:text-black transition-colors">Favorites</Link></li>
-              <li><Link href="/cart" className="text-gray-500 text-sm hover:text-black transition-colors">Cart</Link></li>
+            <h3 className="text-[11px] font-bold tracking-[3px] uppercase mb-8 text-dark-brown">Account</h3>
+            <ul className="space-y-4">
+              {['Profile', 'Orders', 'Favorites', 'Cart'].map((item) => (
+                <li key={item}>
+                  <Link href={`/${item.toLowerCase()}`} className="text-sm text-medium-brown hover:text-tan transition-all duration-300 flex items-center group">
+                    <span className="w-0 group-hover:w-3 h-[1px] bg-tan mr-0 group-hover:mr-2 transition-all"></span>
+                    {item}
+                  </Link>
+                </li>
+              ))}
             </ul>
           </div>
 
-          {/* Contact */}
+          {/* Section 4: Newsletter / Contact */}
           <div>
-            <h3 className="text-xs font-bold tracking-widest uppercase mb-4">Contact</h3>
-            <ul className="space-y-3 text-sm text-gray-500">
-              <li>Email: hello@drapey.com</li>
-              <li>Cairo, Egypt</li>
-            </ul>
+            <h3 className="text-[11px] font-bold tracking-[3px] uppercase mb-8 text-dark-brown">Contact Us</h3>
+            <div className="space-y-4">
+              <p className="text-sm text-medium-brown font-sans">
+                Questions? Email us at:<br />
+                <a href="mailto:hello@drapey.com" className="text-dark-brown font-medium hover:text-tan transition-colors">
+                  hello@drapey.com
+                </a>
+              </p>
+              <p className="text-sm text-medium-brown font-sans">
+                Based in:<br />
+                <span className="text-dark-brown font-medium">Cairo, Egypt</span>
+              </p>
+            </div>
           </div>
         </div>
 
-        <div className="border-t border-gray-100 pt-6 flex flex-col sm:flex-row justify-between items-center gap-4">
-          <p className="text-gray-400 text-xs">&copy; {new Date().getFullYear()} Drapey. All rights reserved.</p>
-          <div className="flex gap-6">
-            <span className="text-gray-400 text-xs">Terms</span>
-            <span className="text-gray-400 text-xs">Privacy</span>
+        {/* Bottom Bar */}
+        <div className="border-t border-light-beige pt-10 flex flex-col md:flex-row justify-between items-center gap-6">
+          <p className="text-medium-brown text-[10px] font-bold tracking-widest uppercase">
+            &copy; {new Date().getFullYear()} DRAPEY. All rights reserved.
+          </p>
+          
+          <div className="flex gap-8">
+            <Link href="/terms" className="text-medium-brown text-[10px] font-bold tracking-widest uppercase hover:text-tan transition-colors">
+              Terms
+            </Link>
+            <Link href="/privacy" className="text-medium-brown text-[10px] font-bold tracking-widest uppercase hover:text-tan transition-colors">
+              Privacy
+            </Link>
           </div>
         </div>
+
       </div>
     </footer>
   );

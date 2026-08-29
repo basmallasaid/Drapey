@@ -1,4 +1,4 @@
-// app/admin/page.js
+﻿// app/admin/page.js
 import { requireAdmin } from "@/lib/supabase/admin";
 import { redirect } from "next/navigation";
 import Link from "next/link";
@@ -223,9 +223,9 @@ export default async function AdminDashboardPage() {
       {/* 1. Stats Grid (real values; real MoM trends only, never fake) */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
         {stats.map((s, i) => (
-          <div key={i} className="bg-white p-6 rounded-[24px] border border-[#EBE2DA] shadow-sm">
-            <div className="flex items-center gap-3 mb-4 text-[#8E8A84]">
-              <div className="p-2 bg-[#FAF8F5] rounded-lg">{s.icon}</div>
+          <div key={i} className="bg-white p-6 rounded-[24px] border border-[var(--color-light-beige)] shadow-sm">
+            <div className="flex items-center gap-3 mb-4 text-[var(--color-medium-brown)]">
+              <div className="p-2 bg-[var(--color-cream)] rounded-lg">{s.icon}</div>
               <span className="text-[10px] font-bold uppercase tracking-wider">{s.label}</span>
             </div>
             <div className="text-2xl font-bold">{s.value}</div>
@@ -233,48 +233,48 @@ export default async function AdminDashboardPage() {
               <div className={`text-[11px] font-bold mt-2 ${s.trend >= 0 ? "text-green-600" : "text-red-500"}`}>
                 {s.trend >= 0 ? "+" : ""}
                 {s.trend.toFixed(1)}%{" "}
-                <span className="text-[#8E8A84] font-normal text-[10px]">vs last month</span>
+                <span className="text-[var(--color-medium-brown)] font-normal text-[10px]">vs last month</span>
               </div>
             )}
           </div>
         ))}
       </div>
 
-      {/* 2. Charts — Sales Overview + Orders Overview (side by side on desktop) */}
+      {/* 2. Charts â€” Sales Overview + Orders Overview (side by side on desktop) */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        <div className="bg-white p-6 rounded-[24px] border border-[#EBE2DA] shadow-sm">
+        <div className="bg-white p-6 rounded-[24px] border border-[var(--color-light-beige)] shadow-sm">
           <SalesChart thisMonth={thisMonth} lastMonth={lastMonth} />
         </div>
-        <div className="bg-white p-6 rounded-[24px] border border-[#EBE2DA] shadow-sm">
+        <div className="bg-white p-6 rounded-[24px] border border-[var(--color-light-beige)] shadow-sm">
           <OrdersChart counts={statusCounts} />
         </div>
       </div>
 
       {/* 3. Top Products (real units sold + revenue) */}
-      <div className="bg-white p-6 rounded-[24px] border border-[#EBE2DA] shadow-sm">
+      <div className="bg-white p-6 rounded-[24px] border border-[var(--color-light-beige)] shadow-sm">
         <div className="flex justify-between items-center mb-6">
-          <h3 className="font-bold text-[#3E3A36]">Top Products</h3>
+          <h3 className="font-bold text-[var(--color-dark-brown)]">Top Products</h3>
         </div>
         {topProductsWithImages.length === 0 ? (
-          <div className="text-center text-xs text-[#8E8A84] py-6">No sales yet</div>
+          <div className="text-center text-xs text-[var(--color-medium-brown)] py-6">No sales yet</div>
         ) : (
           <div className="space-y-5">
             {topProductsWithImages.map((product, i) => (
               <div key={product.id} className="flex items-center gap-4">
-                <span className="text-xs font-bold text-[#8E8A84] w-4 shrink-0">{i + 1}</span>
+                <span className="text-xs font-bold text-[var(--color-medium-brown)] w-4 shrink-0">{i + 1}</span>
                 {product.image_url ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img
                     src={product.image_url}
                     alt={product.name}
-                    className="w-10 h-10 object-cover rounded-lg bg-[#F3EFEA] shrink-0"
+                    className="w-10 h-10 object-cover rounded-lg bg-[var(--color-light-beige)] shrink-0"
                   />
                 ) : (
-                  <div className="w-10 h-10 bg-[#F3EFEA] rounded-lg shrink-0"></div>
+                  <div className="w-10 h-10 bg-[var(--color-light-beige)] rounded-lg shrink-0"></div>
                 )}
                 <div className="flex-1 min-w-0">
-                  <p className="text-xs font-bold text-[#3E3A36] truncate">{product.name}</p>
-                  <p className="text-[10px] text-[#8E8A84]">{product.units} sold</p>
+                  <p className="text-xs font-bold text-[var(--color-dark-brown)] truncate">{product.name}</p>
+                  <p className="text-[10px] text-[var(--color-medium-brown)]">{product.units} sold</p>
                 </div>
                 <div className="text-xs font-bold whitespace-nowrap shrink-0">EGP {product.revenue.toLocaleString()}</div>
               </div>
@@ -284,14 +284,14 @@ export default async function AdminDashboardPage() {
       </div>
 
       {/* 4. Recent Orders */}
-      <div className="bg-white rounded-[24px] border border-[#EBE2DA] overflow-hidden shadow-sm">
-        <div className="p-6 border-b border-[#EBE2DA] flex justify-between items-center">
-          <h3 className="font-bold text-[#3E3A36]">Recent Orders</h3>
-          <Link href="/admin/orders" className="text-xs text-[#8E8A84] hover:text-black">View All</Link>
+      <div className="bg-white rounded-[24px] border border-[var(--color-light-beige)] overflow-hidden shadow-sm">
+        <div className="p-6 border-b border-[var(--color-light-beige)] flex justify-between items-center">
+          <h3 className="font-bold text-[var(--color-dark-brown)]">Recent Orders</h3>
+          <Link href="/admin/orders" className="text-xs text-[var(--color-medium-brown)] hover:text-[var(--color-tan)]">View All</Link>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full text-left">
-            <thead className="bg-[#FAF8F5] text-[11px] text-[#8E8A84] uppercase tracking-widest">
+            <thead className="bg-[var(--color-cream)] text-[11px] text-[var(--color-medium-brown)] uppercase tracking-widest">
               <tr>
                 <th className="px-6 py-4">Order ID</th>
                 <th className="px-6 py-4">Customer</th>
@@ -300,21 +300,21 @@ export default async function AdminDashboardPage() {
                 <th className="px-6 py-4 text-center">Status</th>
               </tr>
             </thead>
-            <tbody className="text-sm divide-y divide-[#EBE2DA]">
+            <tbody className="text-sm divide-y divide-[var(--color-light-beige)]">
               {!recentOrdersRes.data?.length ? (
                 <tr>
-                  <td colSpan={5} className="px-6 py-8 text-center text-[#8E8A84] text-xs">
+                  <td colSpan={5} className="px-6 py-8 text-center text-[var(--color-medium-brown)] text-xs">
                     No orders yet
                   </td>
                 </tr>
               ) : (
                 recentOrdersRes.data.map((order) => (
-                  <tr key={order.id} className="hover:bg-[#FCFAF8] transition-colors">
-                    <td className="px-6 py-4 text-[#8E8A84] whitespace-nowrap">#ORD-{order.id.slice(0, 4)}</td>
+                  <tr key={order.id} className="hover:bg-[var(--color-cream)] transition-colors">
+                    <td className="px-6 py-4 text-[var(--color-medium-brown)] whitespace-nowrap">#ORD-{order.id.slice(0, 4)}</td>
                     <td className="px-6 py-4 font-semibold whitespace-nowrap">
                       {order.customer_name || order.users?.full_name || "Guest"}
                     </td>
-                    <td className="px-6 py-4 text-center text-[#8E8A84] whitespace-nowrap">
+                    <td className="px-6 py-4 text-center text-[var(--color-medium-brown)] whitespace-nowrap">
                       {new Date(order.created_at).toLocaleDateString()}
                     </td>
                     <td className="px-6 py-4 text-right font-bold whitespace-nowrap">
@@ -334,11 +334,11 @@ export default async function AdminDashboardPage() {
   );
 }
 
-// Shared StatusBadge — colors sourced from the centralized STATUS_META
+// Shared StatusBadge â€” colors sourced from the centralized STATUS_META
 function StatusBadge({ status }) {
   const meta = STATUS_META[status];
   return (
-    <span className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-tighter ${meta?.badge || "bg-gray-100 text-gray-600"}`}>
+    <span className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-tighter ${meta?.badge || "bg-light-beige text-brown"}`}>
       {status}
     </span>
   );

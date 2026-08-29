@@ -16,16 +16,13 @@ const ProductCard = ({ product }) => {
   const secondImage = images.find(img => !img.is_primary);
   const variants = product.product_variants || [];
   const uniqueColors = [...new Set(variants.map(v => v.color))];
-  const hasStock = variants.some(v => v.stock_quantity > 0);
   const fav = isFavorite(product.id);
 
   const handleAddToCart = async (e) => {
     e.preventDefault();
     e.stopPropagation();
     const firstVariant = variants.find(v => v.stock_quantity > 0);
-    if (firstVariant) {
-      await addItem(firstVariant.id);
-    }
+    if (firstVariant) await addItem(firstVariant.id);
   };
 
   const handleToggleFav = async (e) => {
@@ -35,86 +32,85 @@ const ProductCard = ({ product }) => {
   };
 
   return (
-    <Link href={`/product/${product.id}`}>
+    <Link href={`/product/${product.id}`} className="group block mb-12">
       <div
-        className="flex flex-col items-center text-center mb-8 max-w-[270px] mx-auto relative"
+        className="relative overflow-hidden bg-cream"
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
       >
-        {/* Image container */}
-        <div className="relative w-full overflow-hidden cursor-pointer h-[280px] sm:h-[300px] md:h-72 flex items-center justify-center">
+        {/* Image Container - Aspect Ratio 3:4 is standard for fashion */}
+        <div className="aspect-[3/4] relative overflow-hidden bg-white shadow-sm">
           {primaryImage ? (
             <>
               <img
                 src={primaryImage.image_url}
                 alt={product.name}
-                className={`w-full h-full object-contain mix-blend-multiply transition-all duration-700 ${
-                  isHovered && secondImage ? 'opacity-0' : 'opacity-100 scale-100'
-                } ${isHovered ? 'scale-105' : ''}`}
+                className={`w-full h-full object-cover transition-all duration-1000 ${
+                  isHovered && secondImage ? 'opacity-0 scale-105' : 'opacity-100 scale-100'
+                }`}
               />
               {secondImage && (
                 <img
                   src={secondImage.image_url}
                   alt={product.name}
-                  className={`absolute inset-0 w-full h-full object-contain mix-blend-multiply mx-auto my-auto transition-all duration-700 ${
-                    isHovered ? 'opacity-100 scale-105' : 'opacity-0'
+                  className={`absolute inset-0 w-full h-full object-cover transition-all duration-1000 ${
+                    isHovered ? 'opacity-100 scale-105' : 'opacity-0 scale-100'
                   }`}
                 />
               )}
             </>
           ) : (
-            <div className="text-gray-300 text-sm">No Image</div>
+            <div className="w-full h-full flex items-center justify-center text-medium-brown text-[10px] uppercase tracking-widest bg-light-beige">
+              No Image
+            </div>
           )}
 
-          {/* Hover action buttons */}
-          <div
-            className={`absolute top-3 right-3 flex flex-col gap-2 transition-all duration-300 ${
-              isHovered ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-4'
-            }`}
-          >
-            <button
+          {/* Quick Actions Overlay */}
+          <div className="absolute inset-0 bg-dark-brown/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+          
+          <div className={`absolute bottom-4 left-0 right-0 px-4 flex flex-col gap-2 transition-all duration-500 ${
+            isHovered ? 'translate-y-0 opacity-100' : 'translate-y-4 opacity-0'
+          }`}>
+             <button
               onClick={handleAddToCart}
-              className="w-9 h-9 bg-white rounded-full shadow-md flex items-center justify-center hover:bg-black hover:text-white transition-all"
-              title="Add to cart"
+              className="bg-white text-dark-brown py-3 text-[10px] font-bold uppercase tracking-[2px] shadow-xl hover:bg-dark-brown hover:text-white transition-all active:scale-95"
             >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
-              </svg>
-            </button>
-            <button
-              onClick={handleToggleFav}
-              className="w-9 h-9 bg-white rounded-full shadow-md flex items-center justify-center hover:bg-black hover:text-white transition-all"
-              title="Add to favorites"
-            >
-              <svg className="w-4 h-4" fill={fav ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-              </svg>
+              Add to Cart
             </button>
           </div>
+
+          <button
+            onClick={handleToggleFav}
+            className="absolute top-4 right-4 p-2.5 bg-white/80 backdrop-blur-md rounded-full shadow-sm text-dark-brown hover:text-tan transition-all"
+          >
+            <svg className="w-4 h-4" fill={fav ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+            </svg>
+          </button>
         </div>
 
-        {/* Product info */}
-        <h3 className="text-sm font-semibold mt-3 mb-1 text-gray-900 hover:text-gray-600 transition-colors cursor-pointer">
-          {product.name}
-        </h3>
-
-        <p className="text-base font-bold text-gray-800 mb-2">
-          ${product.price?.toFixed(2)}
-        </p>
-
-        {/* Color dots */}
-        {uniqueColors.length > 0 && (
-          <div className="flex gap-2 justify-center">
-            {uniqueColors.slice(0, 5).map((color) => (
-              <span
-                key={color}
-                className="w-3.5 h-3.5 rounded-full border border-gray-200"
-                style={{ backgroundColor: color }}
-                title={color}
-              />
-            ))}
-          </div>
-        )}
+        {/* Info Area */}
+        <div className="pt-5 text-center px-2 space-y-1">
+          <h3 className="text-xs font-bold tracking-widest uppercase text-dark-brown group-hover:text-tan transition-colors">
+            {product.name}
+          </h3>
+          <p className="text-sm font-bold text-dark-brown opacity-90">
+            ${product.price?.toFixed(2)}
+          </p>
+          
+          {/* Subtle Color Dots */}
+          {uniqueColors.length > 0 && (
+            <div className="flex gap-2 justify-center pt-2">
+              {uniqueColors.slice(0, 4).map((color) => (
+                <span
+                  key={color}
+                  className="w-2.5 h-2.5 rounded-full border border-light-beige ring-offset-2 hover:ring-1 hover:ring-tan transition-all"
+                  style={{ backgroundColor: color }}
+                />
+              ))}
+            </div>
+          )}
+        </div>
       </div>
     </Link>
   );
