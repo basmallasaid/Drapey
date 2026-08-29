@@ -4,6 +4,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '../../providers';
+import { showToast, showError } from '@/lib/sweetalert';
 
 export default function RegisterPageContent() {
   const { signup } = useAuth();
@@ -20,11 +21,14 @@ export default function RegisterPageContent() {
     setLoading(true);
     try {
       await signup(email, password, fullName);
+      showToast('success', 'Account created!');
       router.push('/');
     } catch (e) {
       if (e.message?.includes('already')) {
+        showError('Registration failed', 'This email is already registered.');
         setError('This email is already registered.');
       } else {
+        showError('Registration failed', 'Please try again.');
         setError(e.message || 'Registration failed. Please try again.');
       }
     } finally {

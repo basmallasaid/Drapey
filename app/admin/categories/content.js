@@ -3,16 +3,18 @@
 
 import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { showToast, showError, confirmAction } from "@/lib/sweetalert";
 import { 
   Plus, Edit2, Trash2, Folder, Image as ImageIcon, 
   Link as LinkIcon, UploadCloud, X, LayoutGrid, Info 
 } from "lucide-react";
 
 export default function CategoriesContent({ categories }) {
-  const [message, setMessage] = useState(null);
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState(null);
   const [saving, setSaving] = useState(false);
+  const [deleting, setDeleting] = useState(null);
+  const [categoryList, setCategoryList] = useState(categories);
 
   // Form state
   const [name, setName] = useState("");
@@ -29,21 +31,67 @@ export default function CategoriesContent({ categories }) {
   function startCreate() {
     setEditing(null); setName(""); setSlug(""); setDescription("");
     setImageMode("url"); setImageUrl(""); setPreview(""); setUploadFile(null);
-    setMessage(null); setShowForm(true);
+    setShowForm(true);
   }
 
   function startEdit(c) {
     setEditing(c.id); setName(c.name); setSlug(c.slug || "");
     setDescription(c.description || ""); setImageUrl(c.image_url || "");
     setPreview(c.image_url || ""); setImageMode("url");
-    setUploadFile(null); setMessage(null); setShowForm(true);
+    setUploadFile(null); setShowForm(true);
   }
 
-  async function handleSave(e) { /* كود الحفظ الأصلي */ e.preventDefault(); setMessage(null); setSaving(true); const resolvedImageUrl = imageMode === "upload" && uploadFile ? await uploadCategoryImage(uploadFile) : imageUrl; try { const body = { name, slug, description, image_url: resolvedImageUrl }; const res = await fetch("/api/admin/categories", { method: editing ? "PATCH" : "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(editing ? { id: editing, ...body } : body) }); if (!res.ok) throw new Error("Failed"); window.location.reload(); } catch (err) { setMessage({ type: "error", text: err.message }); setSaving(false); } }
+  async function handleSave(e) {
+    e.preventDefault();
+    setSaving(true);
+    try {
+      const resolvedImageUrl = imageMode === "upload" && uploadFile ? await uploadCategoryImage(uploadFile) : imageUrl;
+      const body = { name, slug, description, image_url: resolvedImageUrl };
+      const res = await fetch("/api/admin/categories", {
+        method: editing ? "PATCH" : "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(editing ? { id: editing, ...body } : body),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to save category");
+      await showToast("success", editing ? "Category updated." : "Category added successfully!");
+      window.location.reload();
+    } catch (err) {
+      showError("Could not save category", err.message || "Failed to save category");
+      setSaving(false);
+    }
+  }
 
   async function uploadCategoryImage(file) { /* كود الرفع الأصلي */ const path = `categories/${Date.now()}-${file.name}`; const { data, error } = await supabase.storage.from("product-images").upload(path, file); if (error) throw error; return supabase.storage.from("product-images").getPublicUrl(path).data.publicUrl; }
 
-  async function handleDelete(id) { if (!confirm("Delete this category?")) return; await fetch("/api/admin/categories", { method: "DELETE", body: JSON.stringify({ id }) }); window.location.reload(); }
+  async function handleDelete(target) {
+    const id = target?.id;
+    if (!id) return;
+    const confirmed = await confirmAction({
+      title: "Delete category?",
+      text: `Are you sure you want to delete "${target?.name}"? This cannot be undone.`,
+      confirmText: "Yes, delete",
+    });
+    if (!confirmed) return;
+    setDeleting(id);
+    try {
+      const res = await fetch("/api/admin/categories", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || "Failed to delete category");
+      }
+      setCategoryList((prev) => prev.filter((c) => c.id !== id));
+      showToast("success", "Category deleted.");
+    } catch (err) {
+      showError("Could not delete category", err.message || "Failed to delete category.");
+    } finally {
+      setDeleting(null);
+    }
+  }
 
   return (
     <div className="space-y-8">
@@ -60,12 +108,6 @@ export default function CategoriesContent({ categories }) {
           <Plus size={18} /> Add New Category
         </button>
       </div>
-
-      {message && (
-        <div className={`p-4 rounded-2xl text-sm font-medium border ${message.type === "success" ? "bg-green-50 text-green-700 border-green-100" : "bg-red-50 text-red-700 border-red-100"}`}>
-          {message.text}
-        </div>
-      )}
 
       {/* Form Overlay Card */}
       {showForm && (
@@ -136,13 +178,13 @@ export default function CategoriesContent({ categories }) {
 
       {/* Categories Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-        {categories.length === 0 ? (
+        {categoryList.length === 0 ? (
           <div className="col-span-full py-20 text-center bg-white rounded-[24px] border border-[#EBE2DA]">
             <Folder size={48} className="mx-auto text-[#EBE2DA] mb-4" />
             <p className="text-[#8E8A84]">No categories found. Start by adding one.</p>
           </div>
         ) : (
-          categories.map((c) => (
+          categoryList.map((c) => (
             <div key={c.id} className="group relative bg-white rounded-[24px] border border-[#EBE2DA] p-6 hover:shadow-xl transition-all duration-300">
               <div className="flex items-center justify-between mb-6">
                 <div className="w-16 h-16 rounded-2xl bg-[#F3EFEA] overflow-hidden border border-[#EBE2DA]">
@@ -154,7 +196,17 @@ export default function CategoriesContent({ categories }) {
                 </div>
                 <div className="flex gap-1 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
                   <button onClick={() => startEdit(c)} className="p-2 text-[#3E3A36] hover:bg-[#FAF8F5] rounded-full transition-colors"><Edit2 size={16}/></button>
-                  <button onClick={() => handleDelete(c.id)} className="p-2 text-red-400 hover:bg-red-50 rounded-full transition-colors"><Trash2 size={16}/></button>
+                  <button
+                    onClick={() => handleDelete(c)}
+                    className="p-2 text-red-400 hover:bg-red-50 rounded-full transition-colors"
+                    title={deleting === c.id ? "Deleting..." : "Delete category"}
+                  >
+                    {deleting === c.id ? (
+                      <span className="block w-4 h-4 border-2 border-red-300 border-t-red-600 rounded-full animate-spin" />
+                    ) : (
+                      <Trash2 size={16}/>
+                    )}
+                  </button>
                 </div>
               </div>
 

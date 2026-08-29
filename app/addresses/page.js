@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '../../providers';
 import { createClient } from '@/lib/supabase/client';
+import { showToast, showError, confirmAction } from '@/lib/sweetalert';
 import Navbar from '../../src/components/Navbar';
 import Footer from '../../src/components/FooterWrapper';
 
@@ -64,23 +65,34 @@ export default function AddressesPage() {
       if (editingId) {
         const { error } = await supabase.from('addresses').update(form).eq('id', editingId);
         if (error) throw error;
+        showToast('success', 'Address updated.');
       } else {
         const { error } = await supabase.from('addresses').insert({ ...form, user_id: user.id });
         if (error) throw error;
+        showToast('success', 'Address saved.');
       }
       resetForm();
       fetchAddresses();
     } catch (err) {
+      showError('Could not save address', err.message || 'Failed to save address');
       setError(err.message || 'Failed to save address');
     }
   };
 
   const handleDelete = async (id) => {
+    const confirmed = await confirmAction({
+      title: 'Delete address?',
+      text: 'This address will be permanently removed. Are you sure?',
+      confirmText: 'Yes, delete',
+    });
+    if (!confirmed) return;
     try {
       const { error } = await supabase.from('addresses').delete().eq('id', id);
       if (error) throw error;
       fetchAddresses();
+      showToast('success', 'Address deleted.');
     } catch (err) {
+      showError('Could not delete address', err.message || 'Failed to delete address');
       setError(err.message || 'Failed to delete address');
     }
   };

@@ -4,6 +4,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '../../providers';
+import { showToast, showError } from '@/lib/sweetalert';
 
 export default function LoginPageContent() {
   const { googleSignIn, login } = useAuth();
@@ -19,6 +20,7 @@ export default function LoginPageContent() {
       setError('');
       await googleSignIn();
     } catch (e) {
+      showError('Google login failed', 'Please try again.');
       setError('Google login failed. Please try again.');
     }
   };
@@ -29,8 +31,10 @@ export default function LoginPageContent() {
     setLoading(true);
     try {
       await login(email, password);
+      showToast('success', 'Welcome back!');
       router.push('/');
     } catch (e) {
+      showError('Login failed', 'Check your credentials.');
       setError(e.message || 'Login failed. Check your credentials.');
     } finally {
       setLoading(false);

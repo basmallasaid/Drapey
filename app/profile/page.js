@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '../../providers';
 import { createClient } from '@/lib/supabase/client';
+import { showToast, showError } from '@/lib/sweetalert';
 import Navbar from '../../src/components/Navbar';
 import Footer from '../../src/components/FooterWrapper';
 
@@ -14,7 +15,6 @@ export default function ProfilePage() {
   const supabase = createClient();
   const [form, setForm] = useState({ full_name: '', phone: '' });
   const [saving, setSaving] = useState(false);
-  const [message, setMessage] = useState('');
 
   useEffect(() => {
     if (!user) {
@@ -29,13 +29,16 @@ export default function ProfilePage() {
   const handleSave = async (e) => {
     e.preventDefault();
     setSaving(true);
-    setMessage('');
     const { error } = await supabase
       .from('users')
       .update({ full_name: form.full_name, phone: form.phone })
       .eq('id', user.id);
     setSaving(false);
-    setMessage(error ? 'Failed to save' : 'Saved successfully');
+    if (error) {
+      showError('Update failed', 'Could not save your profile.');
+    } else {
+      showToast('success', 'Profile saved.');
+    }
   };
 
   if (!user) return null;
@@ -73,7 +76,6 @@ export default function ProfilePage() {
                 <button type="submit" disabled={saving} className="bg-black text-white px-6 py-3 text-xs font-bold uppercase tracking-widest hover:bg-gray-800 transition-colors disabled:opacity-50">
                   {saving ? 'Saving...' : 'Save Changes'}
                 </button>
-                {message && <span className="text-sm text-gray-500">{message}</span>}
               </div>
             </form>
           </div>

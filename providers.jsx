@@ -3,6 +3,7 @@
 import { createContext, useState, useEffect, useContext, useCallback } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { useRouter } from 'next/navigation';
+import { showToast, showError } from '@/lib/sweetalert';
 
 const AuthContext = createContext();
 
@@ -139,6 +140,7 @@ export const CartProvider = ({ children }) => {
 
   const addItem = async (variantId, quantity = 1) => {
     if (!user) {
+      showToast('error', 'Please login to add items to your cart.');
       router.push('/login');
       return { error: 'Please login to add items to cart' };
     }
@@ -149,32 +151,47 @@ export const CartProvider = ({ children }) => {
       .eq('user_id', user.id)
       .single();
 
+    let creationError = null;
     if (!cart) {
-      const { data: newCart } = await supabase
+      const { data: newCart, error } = await supabase
         .from('cart')
         .insert({ user_id: user.id })
         .select('id')
         .single();
-      cart = newCart;
+      if (error) {
+        creationError = error.message;
+      } else {
+        cart = newCart;
+      }
     }
 
     const existing = cartItems.find(item => item.product_variant_id === variantId);
 
-    if (existing) {
+    if (existing && !creationError) {
       const newQty = existing.quantity + quantity;
       const { error } = await supabase
         .from('cart_items')
         .update({ quantity: newQty })
         .eq('id', existing.id);
-      if (error) return { error: error.message };
-    } else {
+      if (error) {
+        showError('Could not update cart', error.message);
+        return { error: error.message };
+      }
+    } else if (!creationError) {
       const { error } = await supabase
         .from('cart_items')
         .insert({ cart_id: cart.id, product_variant_id: variantId, quantity });
-      if (error) return { error: error.message };
+      if (error) {
+        showError('Could not add to cart', error.message);
+        return { error: error.message };
+      }
+    } else {
+      showError('Could not add to cart', creationError);
+      return { error: creationError };
     }
 
     await fetchCart();
+    showToast('success', 'Added to cart!');
     return { success: true };
   };
 
@@ -186,8 +203,12 @@ export const CartProvider = ({ children }) => {
       .from('cart_items')
       .update({ quantity })
       .eq('id', cartItemId);
-    if (error) return { error: error.message };
+    if (error) {
+      showError('Could not update quantity', error.message);
+      return { error: error.message };
+    }
     await fetchCart();
+    showToast('success', 'Cart updated.');
     return { success: true };
   };
 
@@ -196,8 +217,12 @@ export const CartProvider = ({ children }) => {
       .from('cart_items')
       .delete()
       .eq('id', cartItemId);
-    if (error) return { error: error.message };
+    if (error) {
+      showError('Could not remove item', error.message);
+      return { error: error.message };
+    }
     await fetchCart();
+    showToast('success', 'Removed from cart.');
     return { success: true };
   };
 
@@ -267,6 +292,7 @@ export const FavProvider = ({ children }) => {
 
   const toggleFavorite = async (productId) => {
     if (!user) {
+      showToast('error', 'Please login to save favorites.');
       router.push('/login');
       return;
     }
@@ -274,12 +300,22 @@ export const FavProvider = ({ children }) => {
     const existing = favorites.find(f => f.product_id === productId);
 
     if (existing) {
-      await supabase.from('favorites').delete().eq('id', existing.id);
+      const { error } = await supabase.from('favorites').delete().eq('id', existing.id);
+      if (error) {
+        showError('Could not update favorites', error.message);
+        return;
+      }
+      await fetchFavorites();
+      showToast('success', 'Removed from favorites.');
     } else {
-      await supabase.from('favorites').insert({ user_id: user.id, product_id: productId });
+      const { error } = await supabase.from('favorites').insert({ user_id: user.id, product_id: productId });
+      if (error) {
+        showError('Could not update favorites', error.message);
+        return;
+      }
+      await fetchFavorites();
+      showToast('success', 'Added to favorites!');
     }
-
-    await fetchFavorites();
   };
 
   const isFavorite = (productId) => favorites.some(f => f.product_id === productId);

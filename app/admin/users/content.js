@@ -3,6 +3,7 @@
 
 import { useState } from "react";
 import { useAuth } from "@/providers";
+import { showToast, showError, confirmAction } from "@/lib/sweetalert";
 import { 
   Search, ShieldCheck, User as UserIcon, Trash2, 
   Mail, Phone, Calendar, MoreHorizontal, ShieldAlert 
@@ -17,10 +18,10 @@ export default function UsersContent({ users }) {
   const [search, setSearch] = useState("");
   const [roleFilter, setRoleFilter] = useState("all");
   const [updating, setUpdating] = useState(null);
-  const [message, setMessage] = useState(null);
+  const [userList, setUserList] = useState(users);
   const { user: currentUser } = useAuth();
 
-  const filtered = users.filter((u) => {
+  const filtered = userList.filter((u) => {
     const matchSearch =
       u.full_name?.toLowerCase().includes(search.toLowerCase()) ||
       u.email?.toLowerCase().includes(search.toLowerCase()) ||
@@ -38,22 +39,42 @@ export default function UsersContent({ users }) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ userId, role: newRole }),
       });
-      if (!res.ok) throw new Error("Update failed");
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Update failed");
+      await showToast("success", "Role updated.");
       window.location.reload();
     } catch (e) {
-      setMessage({ type: "error", text: e.message });
+      showError("Could not update role", e.message || "Update failed");
       setUpdating(null);
     }
   }
 
-  async function handleDelete(userId) {
-    if (!confirm("Are you sure?")) return;
+  async function handleDelete(target) {
+    const userId = target?.id;
+    if (!userId) return;
+    const confirmed = await confirmAction({
+      title: "Delete user?",
+      text: `Are you sure you want to delete "${target?.full_name}"? This cannot be undone.`,
+      confirmText: "Yes, delete",
+    });
+    if (!confirmed) return;
     setUpdating(userId);
     try {
-      await fetch("/api/admin/users", { method: "DELETE", body: JSON.stringify({ userId }) });
-      window.location.reload();
+      const res = await fetch("/api/admin/users", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || "Failed to delete user");
+      }
+      setUserList((prev) => prev.filter((u) => u.id !== userId));
+      showToast("success", "User deleted.");
     } catch (e) {
-       setUpdating(null);
+      showError("Could not delete user", e.message || "Failed to delete user.");
+    } finally {
+      setUpdating(null);
     }
   }
 
@@ -66,12 +87,6 @@ export default function UsersContent({ users }) {
           <p className="text-sm text-[#8E8A84]">Manage permissions and view customer activity</p>
         </div>
       </div>
-
-      {message && (
-        <div className={`p-4 rounded-2xl text-sm font-medium border ${message.type === "success" ? "bg-green-50 text-green-700 border-green-100" : "bg-red-50 text-red-700 border-red-100"}`}>
-          {message.text}
-        </div>
-      )}
 
       {/* Toolbar / Filters */}
       <div className="flex flex-col sm:flex-row gap-4 bg-white p-4 rounded-[20px] border border-[#EBE2DA] shadow-sm">
@@ -162,12 +177,16 @@ export default function UsersContent({ users }) {
                           <option value="admin">Admin</option>
                         </select>
                         <button
-                          onClick={() => handleDelete(u.id)}
+                          onClick={() => handleDelete(u)}
                           disabled={updating === u.id || isSelf}
-                          className="p-2 text-red-400 hover:bg-red-50 rounded-lg transition-all disabled:opacity-0"
+                          className={`p-2 text-red-400 hover:bg-red-50 rounded-lg transition-all ${isSelf ? "opacity-0 pointer-events-none" : "disabled:opacity-60 disabled:pointer-events-none"}`}
                           title={isSelf ? "Cannot delete yourself" : "Delete user"}
                         >
-                          <Trash2 size={16} />
+                          {updating === u.id ? (
+                            <span className="block w-4 h-4 border-2 border-red-300 border-t-red-600 rounded-full animate-spin" />
+                          ) : (
+                            <Trash2 size={16} />
+                          )}
                         </button>
                       </div>
                     </td>

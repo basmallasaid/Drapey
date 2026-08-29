@@ -4,6 +4,7 @@
 import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { COMMON_SIZES, normalizeSize } from "@/lib/sizes";
+import { showToast, showError, confirmAction } from "@/lib/sweetalert";
 import { 
   Plus, Search, Filter, Edit2, Trash2, CheckCircle, 
   XCircle, Image as ImageIcon, MoreHorizontal, X, UploadCloud 
@@ -20,11 +21,11 @@ function isCommonSize(size) {
 export default function ProductsContent({ products, categories }) {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
-  const [message, setMessage] = useState(null);
   const [editing, setEditing] = useState(null);
   const [showForm, setShowForm] = useState(false);
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(null);
+  const [productList, setProductList] = useState(products);
 
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
@@ -36,7 +37,7 @@ export default function ProductsContent({ products, categories }) {
 
   const supabase = createClient();
 
-  const filtered = products.filter((p) => {
+  const filtered = productList.filter((p) => {
     const matchSearch = p.name?.toLowerCase().includes(search.toLowerCase());
     const matchStatus =
       statusFilter === "all" ||
@@ -45,11 +46,39 @@ export default function ProductsContent({ products, categories }) {
     return matchSearch && matchStatus;
   });
 
-  // (نفس الدوال handleSave, handleImageUpload, handleDelete كما هي في كودك الأصلي)
+  // (نفس الدوال handleSave, handleImageUpload كما هي في كودك الأصلي)
   // ... سأختصرها هنا للتركيز على التصميم ...
   async function handleSave(e) { /* كود الحفظ الأصلي */ }
-  async function handleDelete(id) { /* كود الحذف الأصلي */ }
   async function handleImageUpload(e, index) { /* كود الرفع الأصلي */ }
+
+  async function handleDelete(target) {
+    const id = target?.id;
+    if (!id) return;
+    const confirmed = await confirmAction({
+      title: "Delete product?",
+      text: `Are you sure you want to delete "${target?.name}"? This will also remove its images and variants. This cannot be undone.`,
+      confirmText: "Yes, delete",
+    });
+    if (!confirmed) return;
+    setDeleting(id);
+    try {
+      const res = await fetch("/api/admin/products", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || "Failed to delete product");
+      }
+      setProductList((prev) => prev.filter((p) => p.id !== id));
+      showToast("success", "Product deleted.");
+    } catch (err) {
+      showError("Could not delete product", err.message || "Failed to delete product.");
+    } finally {
+      setDeleting(null);
+    }
+  }
   function startEdit(p) { /* كود التعديل الأصلي */ setEditing(p.id); setName(p.name); setDescription(p.description || ""); setPrice(p.price); setCategoryId(p.category_id || ""); setIsActive(p.is_active); setVariants((p.product_variants || []).map((v) => ({ size: normalizeSize(v.size), color: v.color, stock_quantity: v.stock_quantity, }))); setImages((p.product_images || []).map((img) => ({ image_url: img.image_url, is_primary: img.is_primary, }))); setShowForm(true); }
   function startCreate() { setEditing(null); setName(""); setDescription(""); setPrice(""); setCategoryId(""); setIsActive(true); setVariants([emptyVariant()]); setImages([]); setShowForm(true); }
 
@@ -69,12 +98,6 @@ export default function ProductsContent({ products, categories }) {
           <Plus size={18} /> Add New Product
         </button>
       </div>
-
-      {message && (
-        <div className={`p-4 rounded-2xl text-sm font-medium ${message.type === "success" ? "bg-green-50 text-green-700 border border-green-100" : "bg-red-50 text-red-700 border border-red-100"}`}>
-          {message.text}
-        </div>
-      )}
 
       {/* Toolbar */}
       <div className="flex flex-col sm:flex-row gap-4 bg-white p-4 rounded-[20px] border border-[#EBE2DA] shadow-sm">
@@ -271,8 +294,16 @@ export default function ProductsContent({ products, categories }) {
                       <button onClick={() => startEdit(p)} className="p-2 text-[#3E3A36] hover:bg-white rounded-lg border border-transparent hover:border-[#EBE2DA] shadow-sm transition-all">
                         <Edit2 size={16} />
                       </button>
-                      <button onClick={() => handleDelete(p.id)} className="p-2 text-red-400 hover:bg-red-50 rounded-lg transition-all">
-                        <Trash2 size={16} />
+                      <button
+                        onClick={() => handleDelete(p)}
+                        className="p-2 text-red-400 hover:bg-red-50 rounded-lg transition-all"
+                        title={deleting === p.id ? "Deleting..." : "Delete product"}
+                      >
+                        {deleting === p.id ? (
+                          <span className="block w-4 h-4 border-2 border-red-300 border-t-red-600 rounded-full animate-spin" />
+                        ) : (
+                          <Trash2 size={16} />
+                        )}
                       </button>
                     </div>
                   </td>

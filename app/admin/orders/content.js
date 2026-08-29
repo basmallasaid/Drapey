@@ -2,9 +2,10 @@
 "use client";
 
 import { useState, Fragment } from "react";
+import { showToast, showError, confirmAction } from "@/lib/sweetalert";
 import { 
   Search, Filter, ChevronDown, ChevronUp, Package, 
-  User, MapPin, Calendar, DollarSign, AlertCircle, X, CheckCircle2, Clock
+  User, MapPin, Calendar, DollarSign, X, CheckCircle2, Clock
 } from "lucide-react";
 
 const STATUSES = ["pending", "confirmed", "preparing", "shipped", "delivered", "cancelled"];
@@ -22,9 +23,7 @@ export default function OrdersContent({ orders }) {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [updating, setUpdating] = useState(null);
-  const [message, setMessage] = useState(null);
   const [expanded, setExpanded] = useState(null);
-  const [pendingCancelId, setPendingCancelId] = useState(null);
 
   const filtered = orders.filter((o) => {
     const matchSearch =
@@ -36,6 +35,14 @@ export default function OrdersContent({ orders }) {
   });
 
   async function submitStatusChange(orderId, newStatus) {
+    if (newStatus === "cancelled") {
+      const confirmed = await confirmAction({
+        title: "Cancel order?",
+        text: "This will restore the stock for all items in this order. Are you sure you want to proceed?",
+        confirmText: "Yes, cancel order",
+      });
+      if (!confirmed) return;
+    }
     setUpdating(orderId);
     try {
       const res = await fetch("/api/admin/orders", {
@@ -43,10 +50,12 @@ export default function OrdersContent({ orders }) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ orderId, status: newStatus }),
       });
-      if (!res.ok) throw new Error("Update failed");
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Update failed");
+      await showToast("success", `Order marked as ${newStatus}.`);
       window.location.reload();
     } catch (e) {
-      setMessage({ type: "error", text: e.message });
+      showError("Could not update order", e.message || "Update failed");
     } finally {
       setUpdating(null);
       setPendingCancelId(null);
@@ -129,10 +138,7 @@ export default function OrdersContent({ orders }) {
                       <div className="flex items-center justify-end gap-3">
                         <select
                           value={o.status}
-                          onChange={(e) => {
-                             if(e.target.value === "cancelled") setPendingCancelId(o.id);
-                             else submitStatusChange(o.id, e.target.value);
-                          }}
+                          onChange={(e) => submitStatusChange(o.id, e.target.value)}
                           className="text-[10px] font-bold uppercase bg-white border border-[#EBE2DA] rounded-lg px-2 py-1 outline-none"
                         >
                           {STATUSES.map(s => <option key={s} value={s}>{s}</option>)}
@@ -225,26 +231,6 @@ export default function OrdersContent({ orders }) {
           </table>
         </div>
       </div>
-
-      {/* Cancellation Modal */}
-      {pendingCancelId && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setPendingCancelId(null)} />
-          <div className="relative bg-white w-full max-w-md p-8 rounded-[24px] border border-[#EBE2DA] shadow-2xl text-center">
-            <div className="w-16 h-16 bg-red-50 text-red-500 rounded-full flex items-center justify-center mx-auto mb-4">
-              <AlertCircle size={32} />
-            </div>
-            <h3 className="text-xl font-bold text-[#3E3A36] mb-2">Cancel Order?</h3>
-            <p className="text-sm text-[#8E8A84] mb-8">
-              This action will restore the stock for all items in this order. Are you sure you want to proceed?
-            </p>
-            <div className="flex gap-3">
-              <button onClick={() => setPendingCancelId(null)} className="flex-1 py-3 border border-[#EBE2DA] rounded-xl text-sm font-bold text-[#3E3A36] hover:bg-[#FAF8F5]">No, Keep it</button>
-              <button onClick={() => submitStatusChange(pendingCancelId, "cancelled")} className="flex-1 py-3 bg-red-600 text-white rounded-xl text-sm font-bold hover:bg-red-700 shadow-lg shadow-red-200">Yes, Cancel Order</button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

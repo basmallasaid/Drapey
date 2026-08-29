@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { useAuth, useCart } from '../../providers';
 import { createClient } from '@/lib/supabase/client';
 import { calculateShipping } from '../../lib/constants';
+import { showSuccess, showError } from '@/lib/sweetalert';
 import Navbar from '../../src/components/Navbar';
 import Footer from '../../src/components/FooterWrapper';
 
@@ -104,14 +105,17 @@ export default function CheckoutPage() {
       const data = await res.json();
 
       if (!res.ok) {
+        showError('Order failed', data.error || 'Failed to place order');
         setError(data.error || 'Failed to place order');
         setLoading(false);
         return;
       }
 
       await clearCart();
+      showSuccess('Order placed!', 'Thank you for your order.');
       router.push(`/order-confirmation?id=${data.orderId}`);
     } catch (err) {
+      showError('Something went wrong', 'Please try again.');
       setError('Something went wrong. Please try again.');
       setLoading(false);
     }
