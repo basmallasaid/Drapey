@@ -5,8 +5,8 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '../../providers';
 import { createClient } from '@/lib/supabase/client';
-import Navbar from '../../src/components/Navbar';
-import Footer from '../../src/components/FooterWrapper';
+import { showToast, showError } from '@/lib/sweetalert';
+
 
 export default function ProfilePage() {
   const { user, profile, logout } = useAuth();
@@ -14,7 +14,6 @@ export default function ProfilePage() {
   const supabase = createClient();
   const [form, setForm] = useState({ full_name: '', phone: '' });
   const [saving, setSaving] = useState(false);
-  const [message, setMessage] = useState('');
 
   useEffect(() => {
     if (!user) {
@@ -29,75 +28,126 @@ export default function ProfilePage() {
   const handleSave = async (e) => {
     e.preventDefault();
     setSaving(true);
-    setMessage('');
     const { error } = await supabase
       .from('users')
       .update({ full_name: form.full_name, phone: form.phone })
       .eq('id', user.id);
     setSaving(false);
-    setMessage(error ? 'Failed to save' : 'Saved successfully');
+    if (error) {
+      showError('Update failed', 'Could not save your profile.');
+    } else {
+      showToast('success', 'Profile updated successfully.');
+    }
   };
 
   if (!user) return null;
 
   return (
     <>
-      <Navbar />
-      <div className="pt-20">
-      <div className="bg-[#f6f5f3] py-16 text-center mb-10 border-b border-gray-100">
-        <h1 className="text-3xl md:text-5xl font-serif font-medium mb-4">Profile</h1>
-      </div>
-
-      <div className="max-w-2xl mx-auto px-4 md:px-8 pb-20">
-        <div className="space-y-6">
-          {/* Account info */}
-          <div className="border border-gray-100 p-6">
-            <h2 className="text-xs font-bold uppercase tracking-widest mb-6">Account Details</h2>
-            <p className="text-sm text-gray-500 mb-4">Email: <span className="text-black font-medium">{user.email}</span></p>
-            <p className="text-sm text-gray-500 mb-6">Role: <span className="text-black font-medium capitalize">{profile?.role || 'customer'}</span></p>
-
-            <form onSubmit={handleSave} className="space-y-4">
-              <input
-                value={form.full_name}
-                onChange={(e) => setForm(p => ({ ...p, full_name: e.target.value }))}
-                placeholder="Full Name"
-                className="w-full border border-gray-200 px-4 py-3 text-sm outline-none focus:border-black transition-colors"
-              />
-              <input
-                value={form.phone}
-                onChange={(e) => setForm(p => ({ ...p, phone: e.target.value }))}
-                placeholder="Phone"
-                className="w-full border border-gray-200 px-4 py-3 text-sm outline-none focus:border-black transition-colors"
-              />
-              <div className="flex items-center gap-4">
-                <button type="submit" disabled={saving} className="bg-black text-white px-6 py-3 text-xs font-bold uppercase tracking-widest hover:bg-gray-800 transition-colors disabled:opacity-50">
-                  {saving ? 'Saving...' : 'Save Changes'}
-                </button>
-                {message && <span className="text-sm text-gray-500">{message}</span>}
-              </div>
-            </form>
-          </div>
-
-          {/* Quick links */}
-          <div className="grid grid-cols-2 gap-4">
-            <Link href="/addresses" className="border border-gray-100 p-6 text-center hover:bg-gray-50 transition-colors">
-              <p className="text-xs font-bold uppercase tracking-widest">Addresses</p>
-            </Link>
-            <Link href="/orders" className="border border-gray-100 p-6 text-center hover:bg-gray-50 transition-colors">
-              <p className="text-xs font-bold uppercase tracking-widest">Orders</p>
-            </Link>
-          </div>
-
-          <button
-            onClick={() => { logout(); router.push('/'); }}
-            className="w-full border border-red-200 text-red-500 py-3 text-xs font-bold uppercase tracking-widest hover:bg-red-50 transition-colors"
-          >
-            Logout
-          </button>
+      <main className="min-h-screen bg-white pb-20">
+        {/* Header Section */}
+        <div className="bg-cream pt-32 pb-16 border-b border-light-beige text-center">
+          <h1 className="text-4xl md:text-6xl font-serif text-dark-brown mb-2 tracking-tight">
+            My Account
+          </h1>
+          <p className="text-[10px] md:text-xs font-bold uppercase tracking-[4px] text-medium-brown opacity-70">
+            Manage your profile and orders
+          </p>
         </div>
-      </div>
-      </div>
-      <Footer />
+
+        <div className="max-w-5xl mx-auto px-4 md:px-8 mt-12">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
+            
+            {/* Sidebar/Info Section */}
+            <div className="lg:col-span-1 space-y-8">
+              <div className="border border-light-beige p-8 rounded-sm bg-cream/20">
+                <h2 className="text-[11px] font-bold uppercase tracking-[3px] text-dark-brown mb-6 border-b border-light-beige pb-4">
+                  Account Overview
+                </h2>
+                <div className="space-y-4">
+                  <div>
+                    <label className="text-[10px] text-medium-brown uppercase tracking-widest block mb-1">Email Address</label>
+                    <p className="text-sm font-medium text-dark-brown break-words">{user.email}</p>
+                  </div>
+                  <div>
+                    <label className="text-[10px] text-medium-brown uppercase tracking-widest block mb-1">Membership</label>
+                    <p className="text-sm font-medium text-tan capitalize">{profile?.role || 'Customer'}</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Quick Navigation Cards */}
+              <div className="grid grid-cols-1 gap-4">
+                <Link href="/orders" className="group flex items-center justify-between border border-light-beige p-5 hover:bg-dark-brown transition-all duration-300">
+                  <div className="flex items-center gap-4">
+                    <svg className="w-5 h-5 text-tan" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" /></svg>
+                    <span className="text-[11px] font-bold uppercase tracking-widest text-dark-brown group-hover:text-white transition-colors">My Orders</span>
+                  </div>
+                  <svg className="w-4 h-4 text-medium-brown group-hover:text-white transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" /></svg>
+                </Link>
+
+                <Link href="/addresses" className="group flex items-center justify-between border border-light-beige p-5 hover:bg-dark-brown transition-all duration-300">
+                  <div className="flex items-center gap-4">
+                    <svg className="w-5 h-5 text-tan" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+                    <span className="text-[11px] font-bold uppercase tracking-widest text-dark-brown group-hover:text-white transition-colors">Saved Addresses</span>
+                  </div>
+                  <svg className="w-4 h-4 text-medium-brown group-hover:text-white transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" /></svg>
+                </Link>
+              </div>
+
+              <button
+                onClick={() => { logout(); router.push('/'); }}
+                className="w-full py-4 text-[10px] font-bold uppercase tracking-[3px] text-red-500 border border-red-100 hover:bg-red-50 transition-all duration-300"
+              >
+                Sign Out
+              </button>
+            </div>
+
+            {/* Form Section */}
+            <div className="lg:col-span-2">
+              <div className="border border-light-beige p-8 md:p-12 shadow-sm">
+                <h2 className="text-[13px] font-bold uppercase tracking-[4px] text-dark-brown mb-10 text-center lg:text-left">
+                  Personal Details
+                </h2>
+                
+                <form onSubmit={handleSave} className="space-y-8">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-bold uppercase tracking-widest text-medium-brown">Full Name</label>
+                      <input
+                        value={form.full_name}
+                        onChange={(e) => setForm(p => ({ ...p, full_name: e.target.value }))}
+                        className="w-full border-b border-light-beige py-3 text-sm focus:border-tan outline-none transition-all placeholder:text-light-beige font-sans"
+                        placeholder="e.g. Basmala"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-bold uppercase tracking-widest text-medium-brown">Phone Number</label>
+                      <input
+                        value={form.phone}
+                        onChange={(e) => setForm(p => ({ ...p, phone: e.target.value }))}
+                        className="w-full border-b border-light-beige py-3 text-sm focus:border-tan outline-none transition-all placeholder:text-light-beige font-sans"
+                        placeholder="e.g. 010xxxxxxxx"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="pt-6">
+                    <button 
+                      type="submit" 
+                      disabled={saving} 
+                      className="bg-dark-brown text-white px-12 py-4 text-[10px] font-bold uppercase tracking-[3px] hover:bg-tan transition-all duration-500 disabled:opacity-50 hover:shadow-lg active:scale-95"
+                    >
+                      {saving ? 'Saving Changes...' : 'Save Profile'}
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </main>
     </>
   );
 }

@@ -1,37 +1,34 @@
+// app/layout.js
 import './globals.css';
 import { Inter, Playfair_Display } from 'next/font/google';
 import { AuthProvider, CartProvider, FavProvider } from '../providers';
-
-export const dynamic = 'force-dynamic';
-
-export const metadata = {
-  title: {
-    default: 'Drapey - Clean Clothing for Everyday Wear',
-    template: '%s | Drapey',
-  },
-  description: 'Clean silhouettes and calm tones. Essential clothing for everyday wear. Shop our curated collection of t-shirts, hoodies, pants, and more.',
-};
+import PublicLayout from '../src/components/PublicLayout';
+import Navbar from '../src/components/Navbar';
+import Footer from '../src/components/Footer';
 
 const inter = Inter({
   subsets: ['latin'],
-  variable: '--font-inter',
+  variable: '--font-inter', // هذا يجب أن يطابق الموجود في globals.css
   display: 'swap',
 });
 
 const playfair = Playfair_Display({
   subsets: ['latin'],
-  variable: '--font-playfair',
+  variable: '--font-playfair', // هذا يجب أن يطابق الموجود في globals.css
   display: 'swap',
 });
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="en">
-      <body className={`${inter.variable} ${playfair.variable} antialiased`}>
+    // نضع الـ variables هنا لكي يراها ملف الـ CSS
+    <html lang="en" className={`${inter.variable} ${playfair.variable}`}>
+      <body className="font-sans antialiased"> 
         <AuthProvider>
           <CartProvider>
             <FavProvider>
-              {children}
+              <PublicLayout navbar={<Navbar />} footer={<Footer />}>
+                {children}
+              </PublicLayout>
             </FavProvider>
           </CartProvider>
         </AuthProvider>
