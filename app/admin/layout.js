@@ -22,7 +22,7 @@ export default function AdminLayout({ children }) {
     { href: "/admin/orders", label: "Orders", icon: <ShoppingCart size={20} /> },
     { href: "/admin/users", label: "Customers", icon: <Users size={20} /> },
     { href: "/admin/analytics", label: "Analytics", icon: <BarChart3 size={20} /> },
-    { href: "/admin/reviews", label: "Reviews", icon: <Star size={20} /> },
+    // { href: "/admin/reviews", label: "Reviews", icon: <Star size={20} /> },
     { href: "/admin/settings", label: "Settings", icon: <Settings size={20} /> },
   ];
 

@@ -15,22 +15,22 @@ const Footer = async () => {
   }
 
   return (
-    <footer className="bg-white pt-24 pb-12 border-t border-light-beige">
+    <footer className="bg-white pt-16 md:pt-24 pb-10 md:pb-12 border-t border-light-beige">
       <div className="max-w-7xl mx-auto px-4 md:px-8">
 
         {/* Main Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 lg:gap-8 mb-20">
+        <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-x-6 md:gap-x-8 gap-y-10 md:gap-y-12 lg:gap-8 mb-16 md:mb-20">
 
           {/* Section 1: Brand Identity */}
-          <div className="space-y-6">
+          <div className="space-y-6 col-span-2 md:col-span-1">
             <Link href="/" className="text-3xl font-serif tracking-tighter text-dark-brown">
               DRAPEY
             </Link>
-            <p className="text-medium-brown text-[13px] leading-relaxed max-w-[240px] font-sans opacity-80">
+            <p className="text-medium-brown text-[13px] leading-snug md:leading-relaxed max-w-[280px] md:max-w-[240px] font-sans opacity-80">
               Elevating everyday essentials through clean silhouettes and calm tones.
               Designed for the modern minimalist.
             </p>
-            <div className="flex gap-4 pt-2">
+            <div className="flex flex-wrap gap-x-5 gap-y-3 md:gap-6 pt-2">
               {/* Social Icons Placeholders */}
               {/* <a href="#" className="text-dark-brown hover:text-tan transition-colors">
                 <span className="text-[10px] font-bold tracking-widest uppercase">Instagram</span>
@@ -86,8 +86,8 @@ const Footer = async () => {
 
           {/* Section 2: Shop & Categories */}
           <div>
-            <h3 className="text-[11px] font-bold tracking-[3px] uppercase mb-8 text-dark-brown">Collections</h3>
-            <ul className="space-y-4">
+            <h3 className="text-[11px] font-bold tracking-[3px] uppercase mb-6 md:mb-8 text-dark-brown">Collections</h3>
+            <ul className="space-y-3 md:space-y-4">
               <li>
                 <Link href="/products" className="text-sm text-medium-brown hover:text-tan transition-all duration-300 flex items-center group">
                   <span className="w-0 group-hover:w-3 h-[1px] bg-tan mr-0 group-hover:mr-2 transition-all"></span>
@@ -107,8 +107,8 @@ const Footer = async () => {
 
           {/* Section 3: Customer Care */}
           <div>
-            <h3 className="text-[11px] font-bold tracking-[3px] uppercase mb-8 text-dark-brown">Account</h3>
-            <ul className="space-y-4">
+            <h3 className="text-[11px] font-bold tracking-[3px] uppercase mb-6 md:mb-8 text-dark-brown">Account</h3>
+            <ul className="space-y-3 md:space-y-4">
               {['Profile', 'Orders', 'Favorites', 'Cart'].map((item) => (
                 <li key={item}>
                   <Link href={`/${item.toLowerCase()}`} className="text-sm text-medium-brown hover:text-tan transition-all duration-300 flex items-center group">
@@ -121,8 +121,8 @@ const Footer = async () => {
           </div>
 
           {/* Section 4: Newsletter / Contact */}
-          <div>
-            <h3 className="text-[11px] font-bold tracking-[3px] uppercase mb-8 text-dark-brown">Contact Us</h3>
+          <div className="col-span-2 md:col-span-1">
+            <h3 className="text-[11px] font-bold tracking-[3px] uppercase mb-6 md:mb-8 text-dark-brown">Contact Us</h3>
             <div className="space-y-4">
               <p className="text-sm text-medium-brown font-sans">
                 Questions? Email us at:<br />
@@ -139,7 +139,7 @@ const Footer = async () => {
         </div>
 
         {/* Bottom Bar */}
-        <div className="border-t border-light-beige pt-10 flex flex-col md:flex-row justify-between items-center gap-6">
+        <div className="border-t border-light-beige pt-8 md:pt-10 flex flex-col md:flex-row justify-between items-center gap-6">
           <p className="text-medium-brown text-[10px] font-bold tracking-widest uppercase">
             &copy; {new Date().getFullYear()} DRAPEY. All rights reserved.
           </p>
