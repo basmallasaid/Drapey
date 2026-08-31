@@ -95,7 +95,7 @@ const ProductCard = ({ product }) => {
             {product.name}
           </h3>
           <p className="text-sm font-bold text-dark-brown opacity-90">
-            ${product.price?.toFixed(2)}
+            EGP {product.price?.toLocaleString(undefined, { minimumFractionDigits: 2 })}
           </p>
           
           {/* Subtle Color Dots */}

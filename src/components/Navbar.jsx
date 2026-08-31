@@ -33,6 +33,32 @@ const Navbar = () => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
+ useEffect(() => {
+  const desktopQuery = window.matchMedia('(min-width: 768px)');
+
+  const handleViewportChange = () => {
+    if (desktopQuery.matches) {
+      setMobileOpen(false);
+    }
+  };
+
+  desktopQuery.addEventListener('change', handleViewportChange);
+
+  if (mobileOpen) {
+    document.body.style.overflow = 'hidden';
+    document.documentElement.style.overflow = 'hidden';
+  } else {
+    document.body.style.overflow = '';
+    document.documentElement.style.overflow = '';
+  }
+
+  return () => {
+    desktopQuery.removeEventListener('change', handleViewportChange);
+    document.body.style.overflow = '';
+    document.documentElement.style.overflow = '';
+  };
+}, [mobileOpen]);
+
   const navLinks = [
     { name: 'Home', path: '/' },
     { name: 'Shop', path: '/products' },
@@ -40,11 +66,14 @@ const Navbar = () => {
   ];
 
   return (
+    <>
     <nav
       className={`fixed top-0 left-0 right-0 z-[100] transition-all duration-500 ${
-        scrolled || pathname !== '/'
-          ? "bg-white/95 backdrop-blur-md border-b border-light-beige py-1"
-          : "bg-transparent py-3"
+        mobileOpen
+          ? `bg-white border-b border-light-beige  ${scrolled ? 'py-1' : 'py-3'}`
+          : scrolled || pathname !== '/'
+            ? "bg-white/95 backdrop-blur-md border-b border-light-beige py-1"
+            : "bg-transparent py-3"
       }`}
     >
       <div className="max-w-7xl mx-auto px-4 md:px-8">
@@ -190,8 +219,8 @@ const Navbar = () => {
       </div>
 
       {/* Mobile Menu */}
-      {mobileOpen && (
-        <div className="md:hidden fixed inset-0 top-[64px] bg-white z-[90] animate-fadeIn px-8 py-12">
+      {/* {mobileOpen && (
+        <div className="md:hidden fixed inset-0 z-[90] bg-white overflow-y-auto animate-fadeIn px-8 pt-24 pb-12">
           <div className="flex flex-col space-y-8">
             {navLinks.map((link) => (
               <Link key={link.name} href={link.path} onClick={() => setMobileOpen(false)} className="text-lg font-serif text-dark-brown border-b border-light-beige pb-4 uppercase tracking-[4px]">
@@ -205,8 +234,50 @@ const Navbar = () => {
             )}
           </div>
         </div>
+      )} */}
+      {/* Mobile Menu Backdrop */}
+      {mobileOpen && (
+        <div
+          className="md:hidden fixed inset-0 z-[40] bg-dark-brown/50"
+          onClick={() => setMobileOpen(false)}
+        />
+      )}
+
+      {/* Mobile Menu Drawer */}
+      {mobileOpen && (
+        <aside
+          className="md:hidden fixed top-0 left-0 z-[90] w-[80vw] max-w-[360px] h-[100dvh] bg-white overflow-y-auto overscroll-contain animate-fadeIn px-8 pt-24 pb-12 shadow-[0_0_60px_rgba(0,0,0,0.3)]"
+        >
+          <div className="flex flex-col space-y-8">
+            {navLinks.map((link) => {
+              if (link.auth && !user) return null;
+
+              return (
+                <Link
+                  key={link.name}
+                  href={link.path}
+                  onClick={() => setMobileOpen(false)}
+                  className="text-lg font-serif text-dark-brown border-b border-light-beige pb-4 uppercase tracking-[4px]"
+                >
+                  {link.name}
+                </Link>
+              );
+            })}
+
+            {!user && (
+              <Link
+                href="/login"
+                onClick={() => setMobileOpen(false)}
+                className="text-lg font-serif text-tan uppercase tracking-[4px]"
+              >
+                Login / Register
+              </Link>
+            )}
+          </div>
+        </aside>
       )}
     </nav>
+    </>
   );
 };
 

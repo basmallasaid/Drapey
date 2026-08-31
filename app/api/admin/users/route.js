@@ -21,14 +21,14 @@ export async function PATCH(request) {
     return NextResponse.json({ error: "Cannot change your own admin role" }, { status: 400 });
   }
 
-  const { data, err } = await supabase
+  const { data, error: updateError } = await supabase
     .from("users")
     .update({ role, updated_at: new Date().toISOString() })
     .eq("id", userId)
     .select()
     .single();
 
-  if (err) return NextResponse.json({ error: err.message }, { status: 500 });
+  if (updateError) return NextResponse.json({ error: updateError.message }, { status: 500 });
 
   return NextResponse.json({ user: data });
 }
@@ -62,8 +62,8 @@ export async function DELETE(request) {
 
   // cart, cart_items, favorites and addresses are ON DELETE CASCADE from users,
   // so deleting the profile row cleans those up automatically.
-  const { err } = await supabase.from("users").delete().eq("id", userId);
-  if (err) return NextResponse.json({ error: err.message }, { status: 500 });
+  const { error: deleteError } = await supabase.from("users").delete().eq("id", userId);
+  if (deleteError) return NextResponse.json({ error: deleteError.message }, { status: 500 });
 
   return NextResponse.json({ success: true });
 }

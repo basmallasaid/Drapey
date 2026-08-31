@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { adminResponse } from "@/lib/supabase/admin";
+import { ORDER_STATUSES } from "@/lib/order-status";
 
 export async function PATCH(request) {
   const { error, supabase } = await adminResponse();
@@ -12,8 +13,7 @@ export async function PATCH(request) {
     return NextResponse.json({ error: "orderId and status are required" }, { status: 400 });
   }
 
-  const validStatuses = ["pending", "confirmed", "preparing", "shipped", "delivered", "cancelled"];
-  if (!validStatuses.includes(status)) {
+  if (!ORDER_STATUSES.includes(status)) {
     return NextResponse.json({ error: "Invalid status" }, { status: 400 });
   }
 
@@ -47,14 +47,14 @@ export async function PATCH(request) {
     return NextResponse.json({ order: { id: orderId, status: "cancelled" } });
   }
 
-  const { data, err } = await supabase
+  const { data, error: updateError } = await supabase
     .from("orders")
     .update({ status })
     .eq("id", orderId)
     .select()
     .single();
 
-  if (err) return NextResponse.json({ error: err.message }, { status: 500 });
+  if (updateError) return NextResponse.json({ error: updateError.message }, { status: 500 });
 
   return NextResponse.json({ order: data });
 }

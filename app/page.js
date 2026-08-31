@@ -51,12 +51,12 @@ export default async function HomePage() {
     </span>
 
     <h1 className="text-5xl md:text-8xl font-serif italic tracking-tight leading-tight">
-  Clean Lines, <br />
-  <span className="not-italic font-normal">Calm Tones</span>
+  Grace in<br />
+  <span className="not-italic font-normal">every fold</span>
 </h1>
 
     <p className="text-sm md:text-base max-w-md mx-auto mb-12 leading-relaxed font-sans opacity-90 tracking-wide">
-      Essential clothing designed for everyday comfort. <br className="hidden md:block"/> 
+      Modest Wear clothing designed for everyday comfort. <br className="hidden md:block"/> 
       Minimal, timeless, made to last.
     </p>
 
@@ -166,7 +166,7 @@ export default async function HomePage() {
                 
                 <div className="flex items-center justify-between">
                   <p className="text-sm font-bold text-dark-brown">
-                    ${product.price?.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                    EGP {product.price?.toLocaleString(undefined, { minimumFractionDigits: 2 })}
                   </p>
                   
                   {/* Color Swatches - Made smaller and cleaner */}
@@ -220,7 +220,7 @@ export default async function HomePage() {
           Complimentary Shipping
         </h4>
         <p className="text-xs text-medium-brown font-sans leading-relaxed max-w-[200px] opacity-80">
-          Enjoy free standard delivery on all orders exceeding $100.
+          Enjoy free standard delivery on all orders exceeding EGP 100.
         </p>
       </div>
 
