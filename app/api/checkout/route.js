@@ -40,6 +40,15 @@ export async function POST(request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    const { data: profile } = await supabase
+      .from('users')
+      .select('role')
+      .eq('id', user.id)
+      .single();
+    if (profile?.role === 'admin') {
+      return NextResponse.json({ error: 'Admins cannot place customer orders.' }, { status: 403 });
+    }
+
     const { address, notes } = await request.json();
 
     if (!address?.full_name || !address?.phone || !address?.governorate || !address?.city || !address?.street) {

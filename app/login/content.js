@@ -4,11 +4,13 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '../../providers';
+import { createClient } from '@/lib/supabase/client';
 import { showToast, showError } from '@/lib/sweetalert';
 
 export default function LoginPageContent() {
   const { googleSignIn, login } = useAuth();
   const router = useRouter();
+  const supabase = createClient();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -19,8 +21,18 @@ export default function LoginPageContent() {
     setLoading(true);
     try {
       await login(email, password);
+      const { data: { user } } = await supabase.auth.getUser();
+      let isAdmin = false;
+      if (user) {
+        const { data: profile } = await supabase
+          .from('users')
+          .select('role')
+          .eq('id', user.id)
+          .single();
+        isAdmin = profile?.role === 'admin';
+      }
       showToast('success', 'Welcome back to Drapey');
-      router.push('/');
+      router.push(isAdmin ? '/admin' : '/');
     } catch (e) {
       showError('Login Failed', 'Please check your credentials and try again.');
     } finally {
