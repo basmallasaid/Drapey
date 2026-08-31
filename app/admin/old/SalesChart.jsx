@@ -13,8 +13,8 @@ function niceMax(v) {
 }
 
 function formatMoney(v) {
-  if (v >= 1000) return `$${(v / 1000).toFixed(1)}K`;
-  return `$${Math.round(v)}`;
+  if (v >= 1000) return `EGP ${(v / 1000).toFixed(1)}K`;
+  return `EGP ${Math.round(v)}`;
 }
 
 export default function SalesChart({ points = [] }) {

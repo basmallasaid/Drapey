@@ -48,7 +48,7 @@ export default function FilterSidebar({ categories, selectedCategory, setSelecte
             className="w-full accent-tan h-1 bg-light-beige rounded-lg appearance-none cursor-pointer"
           />
           <div className="flex justify-between mt-4 text-[10px] font-bold tracking-widest text-dark-brown">
-            <span>$0.00</span><span className="text-tan">${localPrice}.00</span>
+            <span>EGP 0.00</span><span className="text-tan">EGP {localPrice.toLocaleString()}.00</span>
           </div>
         </div>
       </FilterSection>

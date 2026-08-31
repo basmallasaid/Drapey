@@ -128,7 +128,7 @@ export default function OrdersPage() {
                     <div className="flex items-center gap-8 mt-4 md:mt-0">
                       <div className="text-right">
                         <p className="text-[10px] text-medium-brown uppercase tracking-widest mb-0.5">Total Amount</p>
-                        <p className="font-bold text-base text-dark-brown">${order.total_amount?.toFixed(2)}</p>
+                        <p className="font-bold text-base text-dark-brown">EGP {order.total_amount?.toLocaleString(undefined, { minimumFractionDigits: 2 })}</p>
                       </div>
                       <svg className={`w-5 h-5 text-medium-brown transition-transform duration-500 ${isExpanded ? 'rotate-180 text-tan' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.2} d="M19 9l-7 7-7-7" />
@@ -152,18 +152,18 @@ export default function OrdersPage() {
                                     Size: {item.size} / Color: {item.color} <span className="mx-2">|</span> Qty: {item.quantity}
                                   </p>
                                 </div>
-                                <p className="font-bold text-dark-brown">${item.total_price?.toFixed(2)}</p>
+                                <p className="font-bold text-dark-brown">EGP {item.total_price?.toLocaleString(undefined, { minimumFractionDigits: 2 })}</p>
                               </div>
                             ))}
                           </div>
                           
                           <div className="pt-6 border-t border-light-beige space-y-2 text-[13px]">
-                            <div className="flex justify-between text-medium-brown"><span>Subtotal</span><span>${order.subtotal?.toFixed(2)}</span></div>
-                            <div className="flex justify-between text-medium-brown"><span>Shipping</span><span>{order.shipping_fee === 0 ? 'Complimentary' : `$${order.shipping_fee?.toFixed(2)}`}</span></div>
-                            {order.discount > 0 && <div className="flex justify-between text-rose-brown"><span>Discount</span><span>-${order.discount?.toFixed(2)}</span></div>}
+                            <div className="flex justify-between text-medium-brown"><span>Subtotal</span><span>EGP {order.subtotal?.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span></div>
+                            <div className="flex justify-between text-medium-brown"><span>Shipping</span><span>{order.shipping_fee === 0 ? 'Complimentary' : `EGP ${order.shipping_fee?.toLocaleString(undefined, { minimumFractionDigits: 2 })}`}</span></div>
+                            {order.discount > 0 && <div className="flex justify-between text-rose-brown"><span>Discount</span><span>-EGP {order.discount?.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span></div>}
                             <div className="flex justify-between font-bold text-[15px] pt-4 text-dark-brown">
                               <span>Total</span>
-                              <span>${order.total_amount?.toFixed(2)}</span>
+                              <span>EGP {order.total_amount?.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
                             </div>
                           </div>
                         </div>

@@ -58,7 +58,6 @@ export default function OrdersContent({ orders }) {
       showError("Could not update order", e.message || "Update failed");
     } finally {
       setUpdating(null);
-      setPendingCancelId(null);
     }
   }
 

@@ -17,26 +17,69 @@ const Footer = async () => {
   return (
     <footer className="bg-white pt-24 pb-12 border-t border-light-beige">
       <div className="max-w-7xl mx-auto px-4 md:px-8">
-        
+
         {/* Main Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 lg:gap-8 mb-20">
-          
+
           {/* Section 1: Brand Identity */}
           <div className="space-y-6">
             <Link href="/" className="text-3xl font-serif tracking-tighter text-dark-brown">
               DRAPEY
             </Link>
             <p className="text-medium-brown text-[13px] leading-relaxed max-w-[240px] font-sans opacity-80">
-              Elevating everyday essentials through clean silhouettes and calm tones. 
+              Elevating everyday essentials through clean silhouettes and calm tones.
               Designed for the modern minimalist.
             </p>
             <div className="flex gap-4 pt-2">
               {/* Social Icons Placeholders */}
-              <a href="#" className="text-dark-brown hover:text-tan transition-colors">
+              {/* <a href="#" className="text-dark-brown hover:text-tan transition-colors">
                 <span className="text-[10px] font-bold tracking-widest uppercase">Instagram</span>
               </a>
               <a href="#" className="text-dark-brown hover:text-tan transition-colors">
                 <span className="text-[10px] font-bold tracking-widest uppercase">TikTok</span>
+              </a> */}
+              <a
+                href="https://www.instagram.com/drapey.official?utm_source=ig_web_button_share_sheet&igsi=ZDNlZDc0MzIxNw=="
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-dark-brown hover:text-tan transition-colors"
+              >
+                <span className="text-[10px] font-bold tracking-widest uppercase">
+                  Instagram
+                </span>
+              </a>
+
+              <a
+                href="https://l.instagram.com/?u=https%3A%2F%2Fwww.tiktok.com%2F%40drapey1%3F_r%3D1%26_t%3DZS-97njx4aEUCH%26fbclid%3DPAcGRvZgJleHRuA2FlbQIxMQBzcnRjBmFwcF9pZA85MzY2MTk3NDMzOTI0NTkAAafzEsIEbJEpyF2-HQF22NvKJk-RiR9RDJlc8wdezHxFqLxLctIzmIEVcEWxXA_aem_pbx8cp1H8b7WGVvop56sIw&e=AUDrTFZMptocyn9agTr2T-u2riBFkwli3SysLP0K57N1O85SAWUv3hVZDsR-PLFt4I99jAA2NdgNMdiKeiJXUIl6ugcyobz0YErbWc-flXM6AYUsY6ptTuwwSiPqqiOasSl-Zkc"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-dark-brown hover:text-tan transition-colors"
+              >
+                <span className="text-[10px] font-bold tracking-widest uppercase">
+                  TikTok
+                </span>
+              </a>
+
+              <a
+                href="https://www.facebook.com/1001414333047157?ref=PROFILE_EDIT_xav_ig_profile_page_web"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-dark-brown hover:text-tan transition-colors"
+              >
+                <span className="text-[10px] font-bold tracking-widest uppercase">
+                  Facebook
+                </span>
+              </a>
+
+              <a
+                href="https://wa.me/YOUR_PHONE_NUMBER"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-dark-brown hover:text-tan transition-colors"
+              >
+                <span className="text-[10px] font-bold tracking-widest uppercase">
+                  WhatsApp
+                </span>
               </a>
             </div>
           </div>
@@ -100,7 +143,7 @@ const Footer = async () => {
           <p className="text-medium-brown text-[10px] font-bold tracking-widest uppercase">
             &copy; {new Date().getFullYear()} DRAPEY. All rights reserved.
           </p>
-          
+
           <div className="flex gap-8">
             <Link href="/terms" className="text-medium-brown text-[10px] font-bold tracking-widest uppercase hover:text-tan transition-colors">
               Terms

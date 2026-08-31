@@ -48,16 +48,16 @@ export async function POST(request) {
     );
   }
 
-  const { data, err } = await supabase
+  const { data, error: insertError } = await supabase
     .from("categories")
     .insert({ name, slug, description, image_url })
     .select()
     .single();
 
-  if (err) {
+  if (insertError) {
     return NextResponse.json(
-      { error: friendlyError(err, err.message) },
-      { status: err.code === "23505" ? 409 : 500 }
+      { error: friendlyError(insertError, insertError.message) },
+      { status: insertError.code === "23505" ? 409 : 500 }
     );
   }
 
@@ -109,17 +109,17 @@ export async function PATCH(request) {
     }
   }
 
-  const { data, err } = await supabase
+  const { data, error: updateError } = await supabase
     .from("categories")
     .update(cleanUpdates)
     .eq("id", id)
     .select()
     .single();
 
-  if (err) {
+  if (updateError) {
     return NextResponse.json(
-      { error: friendlyError(err, err.message) },
-      { status: err.code === "23505" ? 409 : 500 }
+      { error: friendlyError(updateError, updateError.message) },
+      { status: updateError.code === "23505" ? 409 : 500 }
     );
   }
 
@@ -149,8 +149,8 @@ export async function DELETE(request) {
     }, { status: 409 });
   }
 
-  const { err } = await supabase.from("categories").delete().eq("id", id);
-  if (err) return NextResponse.json({ error: friendlyError(err, err.message) }, { status: 500 });
+  const { error: deleteError } = await supabase.from("categories").delete().eq("id", id);
+  if (deleteError) return NextResponse.json({ error: friendlyError(deleteError, deleteError.message) }, { status: 500 });
 
   return NextResponse.json({ success: true });
 }

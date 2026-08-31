@@ -24,6 +24,7 @@ export default function ProductsContent({ products, categories }) {
   const [editing, setEditing] = useState(null);
   const [showForm, setShowForm] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [uploading, setUploading] = useState(false);
   const [deleting, setDeleting] = useState(null);
   const [productList, setProductList] = useState(products);
 
@@ -46,10 +47,130 @@ export default function ProductsContent({ products, categories }) {
     return matchSearch && matchStatus;
   });
 
-  // (Ù†ÙØ³ Ø§Ù„Ø¯ÙˆØ§Ù„ handleSave, handleImageUpload ÙƒÙ…Ø§ Ù‡ÙŠ ÙÙŠ ÙƒÙˆØ¯Ùƒ Ø§Ù„Ø£ØµÙ„ÙŠ)
-  // ... Ø³Ø£Ø®ØªØµØ±Ù‡Ø§ Ù‡Ù†Ø§ Ù„Ù„ØªØ±ÙƒÙŠØ² Ø¹Ù„Ù‰ Ø§Ù„ØªØµÙ…ÙŠÙ… ...
-  async function handleSave(e) { /* ÙƒÙˆØ¯ Ø§Ù„Ø­ÙØ¸ Ø§Ù„Ø£ØµÙ„ÙŠ */ }
-  async function handleImageUpload(e, index) { /* ÙƒÙˆØ¯ Ø§Ù„Ø±ÙØ¹ Ø§Ù„Ø£ØµÙ„ÙŠ */ }
+  function makePrimary(idx) {
+    setImages((prev) => prev.map((img, i) => ({ ...img, is_primary: i === idx })));
+  }
+
+  async function handleImageUpload(e, index) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const allowed = ["image/jpeg", "image/png", "image/webp", "image/gif"];
+    if (!allowed.includes(file.type)) {
+      showError("Unsupported file", "Please choose a JPG, PNG, WebP, or GIF image.");
+      if (e.target) e.target.value = "";
+      return;
+    }
+    if (file.size > 4 * 1024 * 1024) {
+      showError("File too large", "Images must be smaller than 4MB.");
+      if (e.target) e.target.value = "";
+      return;
+    }
+
+    setUploading(true);
+    try {
+      const path = `products/${Date.now()}-${file.name.replace(/\s+/g, "-")}`;
+      const { data, error } = await supabase.storage
+        .from("product-images")
+        .upload(path, file, { cacheControl: "3600", upsert: false });
+
+      if (error) throw new Error(error.message || "Upload failed");
+
+      const { data: urlData } = supabase.storage
+        .from("product-images")
+        .getPublicUrl(data.path);
+
+      setImages((prev) =>
+        prev.map((img, i) => (i === index ? { ...img, image_url: urlData?.publicUrl } : img))
+      );
+      showToast("success", "Image uploaded.");
+    } catch (err) {
+      showError("Upload failed", err.message || "Could not upload the image.");
+    } finally {
+      setUploading(false);
+      if (e.target) e.target.value = "";
+    }
+  }
+
+  async function handleSave(e) {
+    e.preventDefault();
+    if (saving) return;
+
+    const cleanedVariants = variants
+      .map((v) => ({
+        size: normalizeSize(String(v.size || "").trim()),
+        color: String(v.color || "").trim(),
+        stock_quantity: Number(v.stock_quantity) || 0,
+      }))
+      .filter((v) => v.size && v.color);
+
+    if (cleanedVariants.length === 0) {
+      showError("Variant required", "Add at least one size/color variant before saving.");
+      return;
+    }
+
+    const seen = new Set();
+    for (const v of cleanedVariants) {
+      const key = `${v.size}::${v.color.toLowerCase()}`;
+      if (seen.has(key)) {
+        showError("Duplicate variant", `${v.size} / ${v.color} appears more than once.`);
+        return;
+      }
+      seen.add(key);
+    }
+
+    const cleanedImages = images
+      .map((img, i) => ({
+        image_url: img.image_url,
+        is_primary: !!img.is_primary,
+        sort_order: i,
+      }))
+      .filter((img) => img.image_url);
+
+    const payload = {
+      name: String(name || "").trim(),
+      description,
+      price: Number(price),
+      category_id: category_id || null,
+      is_active,
+      variants: cleanedVariants,
+      images: cleanedImages,
+    };
+
+    setSaving(true);
+    try {
+      const res = await fetch("/api/admin/products", {
+        method: editing ? "PATCH" : "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(editing ? { id: editing, ...payload } : payload),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to save product");
+
+      const category = categories.find((c) => c.id === data.product.category_id);
+      const merged = {
+        ...data.product,
+        categories: category ? { name: category.name } : null,
+        product_variants: cleanedVariants.map((v) => ({ ...v })),
+        product_images: cleanedImages.map((img) => ({ ...img })),
+      };
+
+      // Reflect the change immediately in the table without a full reload.
+      setProductList((prev) => {
+        if (prev.some((p) => p.id === data.product.id)) {
+          return prev.map((p) => (p.id === data.product.id ? merged : p));
+        }
+        return [merged, ...prev];
+      });
+
+      showToast("success", editing ? "Product updated." : "Product created.");
+      setShowForm(false);
+    } catch (err) {
+      showError("Could not save product", err.message || "Failed to save product.");
+    } finally {
+      setSaving(false);
+    }
+  }
 
   async function handleDelete(target) {
     const id = target?.id;
@@ -79,7 +200,7 @@ export default function ProductsContent({ products, categories }) {
       setDeleting(null);
     }
   }
-  function startEdit(p) { /* ÙƒÙˆØ¯ Ø§Ù„ØªØ¹Ø¯ÙŠÙ„ Ø§Ù„Ø£ØµÙ„ÙŠ */ setEditing(p.id); setName(p.name); setDescription(p.description || ""); setPrice(p.price); setCategoryId(p.category_id || ""); setIsActive(p.is_active); setVariants((p.product_variants || []).map((v) => ({ size: normalizeSize(v.size), color: v.color, stock_quantity: v.stock_quantity, }))); setImages((p.product_images || []).map((img) => ({ image_url: img.image_url, is_primary: img.is_primary, }))); setShowForm(true); }
+  function startEdit(p) { /* التعليم الأصلي */ setEditing(p.id); setName(p.name); setDescription(p.description || ""); setPrice(p.price); setCategoryId(p.category_id || ""); setIsActive(p.is_active); setVariants((p.product_variants || []).map((v) => ({ size: normalizeSize(v.size), color: v.color, stock_quantity: v.stock_quantity, }))); setImages((p.product_images || []).slice().sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0)).map((img) => ({ image_url: img.image_url, is_primary: img.is_primary, }))); setShowForm(true); }
   function startCreate() { setEditing(null); setName(""); setDescription(""); setPrice(""); setCategoryId(""); setIsActive(true); setVariants([emptyVariant()]); setImages([]); setShowForm(true); }
 
   return (
@@ -205,18 +326,33 @@ export default function ProductsContent({ products, categories }) {
                         <>
                           <img src={img.image_url} alt="" className="w-full h-full object-cover" />
                           <button type="button" onClick={() => setImages(images.filter((_, idx) => idx !== i))} className="absolute top-2 right-2 p-1 bg-white/80 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"><X size={14}/></button>
-                          {img.is_primary && <span className="absolute bottom-2 left-2 px-2 py-0.5 bg-[var(--color-dark-brown)] text-white text-[8px] font-bold uppercase rounded">Primary</span>}
+                          {img.is_primary ? (
+                        <span className="absolute bottom-2 left-2 px-2 py-0.5 bg-[var(--color-dark-brown)] text-white text-[8px] font-bold uppercase rounded">Primary</span>
+                      ) : (
+                        <button type="button" onClick={() => makePrimary(i)} className="absolute bottom-2 left-2 px-2 py-0.5 bg-white/90 text-[var(--color-dark-brown)] text-[8px] font-bold uppercase rounded shadow-sm hover:bg-[var(--color-tan)] hover:text-white transition-colors">
+                          Set Primary
+                        </button>
+                      )}
                         </>
                       ) : (
                         <label className="flex flex-col items-center justify-center h-full cursor-pointer hover:bg-[var(--color-light-beige)] transition-colors">
-                          <UploadCloud size={20} className="text-[var(--color-medium-brown)] mb-1" />
-                          <span className="text-[10px] font-bold text-[var(--color-medium-brown)]">Upload</span>
-                          <input type="file" className="hidden" onChange={(e) => handleImageUpload(e, i)} />
+                          {uploading ? (
+                            <>
+                              <span className="w-5 h-5 border-2 border-[var(--color-medium-brown)] border-t-transparent rounded-full animate-spin" />
+                              <span className="text-[10px] font-bold text-[var(--color-medium-brown)] mt-1">Uploading...</span>
+                            </>
+                          ) : (
+                            <>
+                              <UploadCloud size={20} className="text-[var(--color-medium-brown)] mb-1" />
+                              <span className="text-[10px] font-bold text-[var(--color-medium-brown)]">Upload</span>
+                            </>
+                          )}
+                          <input type="file" className="hidden" accept="image/*" disabled={uploading} onChange={(e) => handleImageUpload(e, i)} />
                         </label>
                       )}
                     </div>
                   ))}
-                  <button type="button" onClick={() => setImages([...images, {image_url: "", is_primary: images.length===0}])} className="aspect-[3/4] rounded-2xl border-2 border-dashed border-[var(--color-light-beige)] flex items-center justify-center text-[var(--color-medium-brown)] hover:bg-[var(--color-cream)] transition-all">
+                  <button type="button" onClick={() => setImages([...images, {image_url: "", is_primary: images.length===0}])} disabled={uploading} className="aspect-[3/4] rounded-2xl border-2 border-dashed border-[var(--color-light-beige)] flex items-center justify-center text-[var(--color-medium-brown)] hover:bg-[var(--color-cream)] transition-all disabled:opacity-50">
                     <Plus size={24} />
                   </button>
                 </div>

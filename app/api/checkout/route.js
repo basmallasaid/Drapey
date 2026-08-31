@@ -1,7 +1,35 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
-import { calculateShipping } from '@/lib/constants';
 import { sendOrderNotification } from '@/lib/email/order-notification';
+
+// Maps the token-prefixed exceptions raised by the place_order RPC
+// (supabase/place_order.sql) into friendly, human-readable messages.
+function friendlyCheckoutError(message) {
+  if (message.startsWith('NO_STOCK:')) {
+    const [, name, size, color, available] = message.split('|');
+    return {
+      code: 'insufficient_stock',
+      message: `Insufficient stock for "${name}" (${size}/${color}). Available: ${available}`,
+    };
+  }
+  if (message.startsWith('UNAVAILABLE:')) {
+    const name = message.slice('UNAVAILABLE:'.length);
+    return { code: 'unavailable', message: `"${name}" is no longer available.` };
+  }
+  if (message.startsWith('CART_EMPTY')) {
+    return {
+      code: 'cart_empty',
+      message: 'Your cart is empty. Add items before checking out.',
+    };
+  }
+  if (message.includes('Missing required address fields')) {
+    return {
+      code: 'invalid_address',
+      message: 'Please fill in all required delivery fields before checking out.',
+    };
+  }
+  return null;
+}
 
 export async function POST(request) {
   try {
@@ -18,163 +46,58 @@ export async function POST(request) {
       return NextResponse.json({ error: 'Missing required address fields' }, { status: 400 });
     }
 
-    // Fetch cart
-    const { data: cart } = await supabase
-      .from('cart')
-      .select('id')
-      .eq('user_id', user.id)
-      .single();
+    // The ENTIRE checkout (validation, order + items, stock deduction, cart
+    // clearing) runs in a single Postgres transaction inside place_order.
+    const { data, error: rpcError } = await supabase.rpc('place_order', {
+      p_address: address,
+      p_notes: notes || '',
+    });
 
-    if (!cart) {
-      return NextResponse.json({ error: 'Cart not found' }, { status: 400 });
-    }
-
-    // Fetch cart items with variant and product info
-    const { data: cartItems } = await supabase
-      .from('cart_items')
-      .select(`
-        id, quantity, product_variant_id,
-        product_variant:product_variants(
-          id, size, color, sku, stock_quantity, product_id,
-          product:products(id, name, price, is_active)
-        )
-      `)
-      .eq('cart_id', cart.id);
-
-    if (!cartItems || cartItems.length === 0) {
-      return NextResponse.json({ error: 'Cart is empty' }, { status: 400 });
-    }
-
-    // Server-side validation
-    let subtotal = 0;
-    const orderItems = [];
-
-    for (const item of cartItems) {
-      const variant = item.product_variant;
-      if (!variant || !variant.product) {
-        return NextResponse.json({ error: `Invalid product variant: ${item.product_variant_id}` }, { status: 400 });
-      }
-
-      if (!variant.product.is_active) {
-        return NextResponse.json({ error: `Product "${variant.product.name}" is no longer available` }, { status: 400 });
-      }
-
-      if (variant.stock_quantity < item.quantity) {
-        return NextResponse.json({
-          error: `Insufficient stock for "${variant.product.name}" (${variant.size}/${variant.color}). Available: ${variant.stock_quantity}`,
-        }, { status: 400 });
-      }
-
-      const unitPrice = variant.product.price;
-      const totalPrice = unitPrice * item.quantity;
-      subtotal += totalPrice;
-
-      orderItems.push({
-        product_variant_id: variant.id,
-        product_name: variant.product.name,
-        size: variant.size,
-        color: variant.color,
-        quantity: item.quantity,
-        unit_price: unitPrice,
-        total_price: totalPrice,
+    if (rpcError) {
+      console.error('[Checkout] place_order error:', {
+        message: rpcError?.message,
+        code: rpcError?.code,
+        details: rpcError?.details,
+        hint: rpcError?.hint,
       });
-    }
 
-    const shippingFee = calculateShipping(subtotal);
-    const totalAmount = subtotal + shippingFee;
-
-    // Create order
-    const { data: order, error: orderError } = await supabase
-      .from('orders')
-      .insert({
-        user_id: user.id,
-        subtotal,
-        shipping_fee: shippingFee,
-        discount: 0,
-        total_amount: totalAmount,
-        customer_name: address.full_name,
-        customer_email: user.email,
-        customer_phone: address.phone,
-        governorate: address.governorate,
-        city: address.city,
-        area: address.area || '',
-        street: address.street,
-        building: address.building || '',
-        floor: address.floor || '',
-        apartment: address.apartment || '',
-        notes: notes || '',
-        status: 'pending',
-      })
-      .select(`
-        id, subtotal, shipping_fee, discount, total_amount,
-        customer_name, customer_email, customer_phone,
-        governorate, city, area, street, building, floor, apartment,
-        notes, status, created_at
-      `)
-      .single();
-
-    if (orderError) {
-      console.error('Order creation error:', {
-        message: orderError?.message,
-        code: orderError?.code,
-        details: orderError?.details,
-        hint: orderError?.hint,
-      });
-      return NextResponse.json({ error: 'Failed to create order' }, { status: 500 });
-    }
-
-    // Insert order items
-    const orderItemsWithId = orderItems.map(item => ({
-      ...item,
-      order_id: order.id,
-    }));
-
-    const { error: itemsError } = await supabase
-      .from('order_items')
-      .insert(orderItemsWithId);
-
-    if (itemsError) {
-      console.error('Order items error:', {
-        message: itemsError?.message,
-        code: itemsError?.code,
-        details: itemsError?.details,
-        hint: itemsError?.hint,
-      });
-      return NextResponse.json({ error: 'Failed to create order items' }, { status: 500 });
-    }
-
-    // Decrement stock atomically using SQL to prevent race conditions
-    for (const item of cartItems) {
-      const { error: stockError } = await supabase
-        .rpc('decrement_stock', {
-          p_variant_id: item.product_variant_id,
-          p_quantity: item.quantity,
-        });
-
-      if (stockError) {
-        console.error('Stock decrement error:', {
-          message: stockError?.message,
-          code: stockError?.code,
-          details: stockError?.details,
-          hint: stockError?.hint,
-        });
-        return NextResponse.json({
-          error: `Failed to update stock for "${item.product_variant.product.name}"`,
-        }, { status: 500 });
+      const friendly = friendlyCheckoutError(rpcError.message || '');
+      if (friendly) {
+        return NextResponse.json({ error: friendly.message, code: friendly.code }, { status: 400 });
       }
+      if (rpcError.code === '42501') {
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      }
+      return NextResponse.json({ error: 'Failed to create order. Please try again.' }, { status: 500 });
     }
 
-    // Clear cart
-    await supabase.from('cart_items').delete().eq('cart_id', cart.id);
+    const orderId = data?.order_id;
 
-    // Send admin email notification (non-blocking — order is already complete)
+    // Load the finished order to send the admin notification. This read is
+    // non-critical — the order already exists and the user sees the success
+    // page regardless of whether the email lands.
+    let order = null;
     try {
-      await sendOrderNotification(order, orderItems);
-    } catch (emailErr) {
-      console.error("[Checkout] Order notification failed (non-critical):", emailErr);
+      const { data: fullOrder } = await supabase
+        .from('orders')
+        .select('*, order_items(*)')
+        .eq('id', orderId)
+        .single();
+      order = fullOrder;
+    } catch (readErr) {
+      console.error('[Checkout] Order reload failed (non-critical):', readErr);
     }
 
-    return NextResponse.json({ success: true, orderId: order.id });
+    // Admin email notification (non-blocking — order is already committed).
+    if (order) {
+      try {
+        await sendOrderNotification(order, order.order_items);
+      } catch (emailErr) {
+        console.error('[Checkout] Order notification failed (non-critical):', emailErr);
+      }
+    }
+
+    return NextResponse.json({ success: true, orderId });
   } catch (err) {
     console.error('Checkout error:', err);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });

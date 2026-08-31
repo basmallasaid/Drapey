@@ -176,7 +176,7 @@ export default function CheckoutPage() {
                     <span className="flex-1 leading-relaxed">
                       {item.product_variant?.product.name} ({item.product_variant?.size}) <span className="text-dark-brown/40">x{item.quantity}</span>
                     </span>
-                    <span className="text-dark-brown shrink-0">${(item.product_variant?.product.price * item.quantity).toFixed(2)}</span>
+                    <span className="text-dark-brown shrink-0">EGP {(item.product_variant?.product.price * item.quantity).toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
                   </div>
                 ))}
               </div>
@@ -184,17 +184,17 @@ export default function CheckoutPage() {
               <div className="pt-8 border-t border-light-beige space-y-4">
                 <div className="flex justify-between text-[11px] font-bold tracking-widest text-medium-brown">
                   <span>Subtotal</span>
-                  <span className="text-dark-brown">${subtotal.toFixed(2)}</span>
+                  <span className="text-dark-brown">EGP {subtotal.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
                 </div>
                 <div className="flex justify-between text-[11px] font-bold tracking-widest text-medium-brown">
                   <span>Shipping</span>
                   <span className={shippingFee === 0 ? 'text-tan' : 'text-dark-brown'}>
-                    {shippingFee === 0 ? 'COMPLIMENTARY' : `$${shippingFee.toFixed(2)}`}
+                    {shippingFee === 0 ? 'COMPLIMENTARY' : `EGP ${shippingFee.toLocaleString(undefined, { minimumFractionDigits: 2 })}`}
                   </span>
                 </div>
                 <div className="flex justify-between items-end pt-8">
                   <span className="text-xs font-bold uppercase tracking-[4px] text-dark-brown">Total Amount</span>
-                  <span className="text-3xl font-bold text-dark-brown leading-none">${total.toFixed(2)}</span>
+                  <span className="text-3xl font-bold text-dark-brown leading-none">EGP {total.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
                 </div>
               </div>
 
