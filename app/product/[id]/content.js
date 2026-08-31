@@ -36,7 +36,7 @@ export default function ProductPageContent() {
         .eq('id', id)
         .single();
 
-      if (data) {
+      if (data && data.is_active) {
         setProduct(data);
         const variants = data.product_variants || [];
         if (variants.length > 0) {

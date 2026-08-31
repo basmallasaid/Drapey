@@ -130,7 +130,20 @@ export const CartProvider = ({ children }) => {
       `)
       .eq('cart_id', cart.id);
 
-    setCartItems(items || []);
+    const activeItems = [];
+    const staleIds = [];
+    for (const item of items || []) {
+      if (item.product_variant?.product?.is_active) {
+        activeItems.push(item);
+      } else {
+        staleIds.push(item.id);
+      }
+    }
+    if (staleIds.length > 0) {
+      await supabase.from('cart_items').delete().in('id', staleIds);
+    }
+
+    setCartItems(activeItems);
     setLoading(false);
   }, [user, supabase]);
 
@@ -282,7 +295,20 @@ export const FavProvider = ({ children }) => {
       `)
       .eq('user_id', user.id);
 
-    setFavorites(data || []);
+    const activeFavorites = [];
+    const staleIds = [];
+    for (const fav of data || []) {
+      if (fav.product?.is_active) {
+        activeFavorites.push(fav);
+      } else {
+        staleIds.push(fav.id);
+      }
+    }
+    if (staleIds.length > 0) {
+      await supabase.from('favorites').delete().in('id', staleIds);
+    }
+
+    setFavorites(activeFavorites);
     setLoading(false);
   }, [user, supabase]);
 

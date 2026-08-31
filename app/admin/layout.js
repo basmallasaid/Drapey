@@ -131,10 +131,10 @@ export default function AdminLayout({ children }) {
             </div>
           </div>
           <div className="flex items-center gap-2 sm:gap-6">
-            <AdminSearch />
-            <button className="p-2 text-[var(--color-medium-brown)] hover:text-[var(--color-dark-brown)] -mr-2 md:mr-0" aria-label="Notifications">
+            {/* <AdminSearch /> */}
+            {/* <button className="p-2 text-[var(--color-medium-brown)] hover:text-[var(--color-dark-brown)] -mr-2 md:mr-0" aria-label="Notifications">
               <Bell size={20} />
-            </button>
+            </button> */}
             <div className="flex items-center gap-3 pl-2 sm:pl-6 border-l border-[var(--color-light-beige)] min-w-0">
               <div className="text-right hidden sm:block min-w-0">
                 <p className="text-sm font-medium truncate max-w-[120px] lg:max-w-[180px]">{adminName}</p>
