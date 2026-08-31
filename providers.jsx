@@ -91,7 +91,7 @@ const CartContext = createContext();
 export const CartProvider = ({ children }) => {
   const [cartItems, setCartItems] = useState([]);
   const [loading, setLoading] = useState(true);
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const router = useRouter();
   const supabase = createClient();
 
@@ -152,6 +152,10 @@ export const CartProvider = ({ children }) => {
   }, [fetchCart]);
 
   const addItem = async (variantId, quantity = 1) => {
+    if (profile?.role === 'admin') {
+      showToast('error', 'Admins cannot add items to the cart.');
+      return { error: 'Admins cannot add items to cart' };
+    }
     if (!user) {
       showToast('error', 'Please login to add items to your cart.');
       router.push('/login');
@@ -272,7 +276,7 @@ const FavContext = createContext();
 export const FavProvider = ({ children }) => {
   const [favorites, setFavorites] = useState([]);
   const [loading, setLoading] = useState(true);
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const router = useRouter();
   const supabase = createClient();
 
@@ -317,6 +321,10 @@ export const FavProvider = ({ children }) => {
   }, [fetchFavorites]);
 
   const toggleFavorite = async (productId) => {
+    if (profile?.role === 'admin') {
+      showToast('error', 'Admins cannot add items to favorites.');
+      return;
+    }
     if (!user) {
       showToast('error', 'Please login to save favorites.');
       router.push('/login');

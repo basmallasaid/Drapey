@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import { createClient } from '../../../lib/supabase/client';
-import { useCart, useFav } from '../../../providers';
+import { useCart, useFav, useAuth } from '../../../providers';
 
 
 export default function ProductPageContent() {
@@ -12,6 +12,8 @@ export default function ProductPageContent() {
   const id = params.id;
   const supabase = createClient();
 
+  const { profile } = useAuth();
+  const isAdmin = profile?.role === 'admin';
   const { addItem } = useCart();
   const { toggleFavorite, isFavorite } = useFav();
 
@@ -173,8 +175,9 @@ export default function ProductPageContent() {
                 )}
               </div>
 
-             
+              
               {/* 4. Action Section */}
+              {!isAdmin && (
 <div className="flex flex-col gap-6 pt-6">
   
   {/* Quantity Selector - سطر منفصل */}
@@ -237,6 +240,7 @@ export default function ProductPageContent() {
     </button>
   </div>
 </div>
+              )}
 
               {/* Description */}
               <div className="pt-10 space-y-6 border-t border-light-beige">

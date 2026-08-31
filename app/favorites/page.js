@@ -8,17 +8,21 @@ import Link from 'next/link';
 
 
 export default function FavoritesPage() {
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const { favorites, loading } = useFav();
   const router = useRouter();
+  const isAdmin = profile?.role === 'admin';
 
   useEffect(() => {
     if (!user && !loading) {
       router.push('/login');
     }
-  }, [user, loading, router]);
+    if (isAdmin) {
+      router.replace('/admin');
+    }
+  }, [user, loading, router, isAdmin]);
 
-  if (loading || !user) {
+  if (loading || !user || isAdmin) {
     return (
       <div className="flex justify-center items-center min-h-screen bg-white">
         <div className="w-8 h-8 border-2 border-light-beige border-t-tan rounded-full animate-spin" />

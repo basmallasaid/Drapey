@@ -1,12 +1,25 @@
 'use client';
 
 import Link from 'next/link';
-import { useCart } from '../../providers';
+import { useRouter } from 'next/navigation';
+import { useEffect } from 'react';
+import { useCart, useAuth } from '../../providers';
 import { calculateShipping } from '../../lib/constants';
 
 
 export default function CartPage() {
   const { cartItems, updateQuantity, removeItem, subtotal, itemCount } = useCart();
+  const { user, profile } = useAuth();
+  const router = useRouter();
+  const isAdmin = profile?.role === 'admin';
+
+  useEffect(() => {
+    if (isAdmin) {
+      router.replace('/admin');
+    }
+  }, [isAdmin, router]);
+
+  if (isAdmin) return null;
 
   const shippingFee = calculateShipping(subtotal);
   const total = subtotal + shippingFee;

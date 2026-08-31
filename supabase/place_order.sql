@@ -61,6 +61,11 @@ BEGIN
     RAISE EXCEPTION 'UNAUTHORIZED' USING ERRCODE = '42501';
   END IF;
 
+  -- Admins must not place customer orders through the normal shopping flow.
+  IF EXISTS (SELECT 1 FROM public.users WHERE id = v_user_id AND role = 'admin') THEN
+    RAISE EXCEPTION 'Admins cannot place customer orders' USING ERRCODE = 'P0001';
+  END IF;
+
   -- Validate the address payload (mirrors the checkout form requirements).
   IF p_address IS NULL
      OR COALESCE(p_address->>'full_name', '') = ''
