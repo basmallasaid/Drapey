@@ -1,19 +1,33 @@
 ﻿// app/admin/layout.js
 "use client";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
 import { useAuth } from "@/providers";
+import AdminSearch from "./AdminSearch";
 import { 
   LayoutDashboard, ShoppingBag, List, ShoppingCart, 
-  Users, BarChart3, Star, Settings, LogOut, Search, Bell, User, Menu, X 
+  Users, BarChart3, Settings, LogOut, Bell, Menu, X, Home 
 } from "lucide-react";
 
 export default function AdminLayout({ children }) {
   const pathname = usePathname();
-  const { profile, user } = useAuth();
+  const router = useRouter();
+  const { profile, user, logout } = useAuth();
+  const [loggingOut, setLoggingOut] = useState(false);
   const adminName = profile?.full_name || "Admin";
   const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  const handleLogout = async () => {
+    if (loggingOut) return;
+    setLoggingOut(true);
+    try {
+      await logout();
+      await router.push("/");
+    } catch {
+      setLoggingOut(false);
+    }
+  };
 
   const navItems = [
     { href: "/admin", label: "Dashboard", icon: <LayoutDashboard size={20} /> },
@@ -23,7 +37,7 @@ export default function AdminLayout({ children }) {
     { href: "/admin/users", label: "Customers", icon: <Users size={20} /> },
     { href: "/admin/analytics", label: "Analytics", icon: <BarChart3 size={20} /> },
     // { href: "/admin/reviews", label: "Reviews", icon: <Star size={20} /> },
-    { href: "/admin/settings", label: "Settings", icon: <Settings size={20} /> },
+    // { href: "/admin/settings", label: "Settings", icon: <Settings size={20} /> },
   ];
 
   const closeSidebar = () => setSidebarOpen(false);
@@ -77,9 +91,25 @@ export default function AdminLayout({ children }) {
           })}
         </nav>
 
-        <div className="p-4 border-t border-[var(--color-light-beige)]">
-          <button className="flex items-center gap-3 w-full px-4 py-3 text-[var(--color-medium-brown)] hover:text-red-600 text-sm font-medium">
-            <LogOut size={20} /> Logout
+        <div className="p-4 border-t border-[var(--color-light-beige)] space-y-1">
+          <Link
+            href="/"
+            onClick={closeSidebar}
+            className="flex items-center gap-3 w-full px-4 py-3 rounded-[15px] text-[var(--color-medium-brown)] hover:bg-[var(--color-cream)] hover:text-[var(--color-dark-brown)] text-sm font-medium transition-all"
+          >
+            <Home size={20} /> Back to Home
+          </Link>
+          <button
+            onClick={handleLogout}
+            disabled={loggingOut}
+            className="flex items-center gap-3 w-full px-4 py-3 text-[var(--color-medium-brown)] hover:text-red-600 text-sm font-medium"
+          >
+            {loggingOut ? (
+              <span className="block w-5 h-5 border-2 border-[var(--color-light-beige)] border-t-red-600 rounded-full animate-spin" />
+            ) : (
+              <LogOut size={20} />
+            )}{" "}
+            {loggingOut ? "Logging out..." : "Logout"}
           </button>
         </div>
       </aside>
@@ -101,14 +131,7 @@ export default function AdminLayout({ children }) {
             </div>
           </div>
           <div className="flex items-center gap-2 sm:gap-6">
-            <div className="relative hidden md:block">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--color-medium-brown)]" size={16} />
-              <input 
-                type="text" 
-                placeholder="Search..." 
-                className="bg-[var(--color-cream)] border-none rounded-full py-2 pl-10 pr-4 text-sm w-40 lg:w-64 focus:ring-1 focus:ring-[var(--color-light-beige)] outline-none" 
-              />
-            </div>
+            <AdminSearch />
             <button className="p-2 text-[var(--color-medium-brown)] hover:text-[var(--color-dark-brown)] -mr-2 md:mr-0" aria-label="Notifications">
               <Bell size={20} />
             </button>
