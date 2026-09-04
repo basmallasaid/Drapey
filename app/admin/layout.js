@@ -43,7 +43,7 @@ export default function AdminLayout({ children }) {
   const closeSidebar = () => setSidebarOpen(false);
 
   return (
-    <div className="flex min-h-screen bg-[var(--color-cream)] text-[var(--color-dark-brown)]">
+    <div className="flex min-h-screen bg-[#F9F6F3] text-[var(--color-dark-brown)]">
       {/* Mobile overlay */}
       {sidebarOpen && (
         <div

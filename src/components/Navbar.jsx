@@ -158,10 +158,11 @@ const Navbar = () => {
               Account Details
             </Link>
             
+            {profile?.role === 'admin'? "":(
             <Link href="/orders" onClick={() => setUserMenuOpen(false)} className="flex items-center px-5 py-2.5 text-[10px] font-bold uppercase tracking-widest text-dark-brown hover:bg-cream hover:text-tan transition-colors">
               My Orders
             </Link>
-            
+            )}
             {profile?.role === 'admin' && (
               <Link href="/admin" onClick={() => setUserMenuOpen(false)} className="flex items-center px-5 py-2.5 text-[10px] font-bold uppercase tracking-widest text-rose-brown hover:bg-cream transition-colors">
                 Admin Panel
