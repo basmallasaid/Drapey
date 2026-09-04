@@ -1,68 +1,106 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
-
-const PRESET_OPTIONS = [
-  { key: "7d", label: "Last 7 Days" },
-  { key: "30d", label: "Last 30 Days" },
-  { key: "3m", label: "Last 3 Months" },
-  { key: "6m", label: "Last 6 Months" },
-  { key: "year", label: "This Year" },
-  { key: "custom", label: "Custom Range" },
-];
+import { RANGE_OPTIONS } from "./utils";
 
 const CONTROL_CLASS =
   "text-[11px] bg-[var(--color-cream)] border border-[var(--color-light-beige)] rounded-lg px-3 py-2 text-[var(--color-medium-brown)] outline-none focus:border-[var(--color-tan)] transition-colors";
 
-export default function DateRangeSelect({ value = "30d", from = "", to = "" }) {
+export default function DateRangeSelect({ range = "30d", from = "", to = "", view = "" }) {
   const router = useRouter();
   const pathname = usePathname();
+  const [fromValue, setFromValue] = useState(from);
+  const [toValue, setToValue] = useState(to);
+  const [error, setError] = useState("");
 
-  const apply = (range, start, end) => {
+  useEffect(() => {
+    setFromValue(from);
+    setToValue(to);
+  }, [from, to]);
+
+  function buildParams(nextRange, f, t, v) {
     const params = new URLSearchParams();
-    if (range) params.set("range", range);
-    if (range === "custom") {
-      if (start) params.set("from", start);
-      if (end) params.set("to", end);
+    params.set("range", nextRange);
+    if (v) params.set("view", v);
+    if (nextRange === "custom") {
+      if (f) params.set("from", f);
+      if (t) params.set("to", t);
     }
-    router.push(`${pathname}?${params.toString()}`);
-  };
+    return params;
+  }
+
+  function navigate(nextRange, f, t) {
+    router.push(`${pathname}?${buildParams(nextRange, f, t, view).toString()}`);
+  }
+
+  function onPreset(e) {
+    setError("");
+    navigate(e.target.value, "", "");
+  }
+
+  function applyCustom() {
+    if (!fromValue || !toValue) {
+      setError("Please choose both a start and end date.");
+      return;
+    }
+    if (fromValue > toValue) {
+      setError("The start date cannot be after the end date.");
+      return;
+    }
+    setError("");
+    navigate("custom", fromValue, toValue);
+  }
 
   return (
-    <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-3">
+    <div className="flex flex-col sm:flex-row flex-wrap items-stretch sm:items-center gap-2">
       <select
-        value={value}
-        onChange={(e) => apply(e.target.value, from, to)}
+        value={range}
+        onChange={onPreset}
         className={CONTROL_CLASS}
         aria-label="Analytics date range"
       >
-        {PRESET_OPTIONS.map((opt) => (
+        {RANGE_OPTIONS.map((opt) => (
           <option key={opt.key} value={opt.key}>
             {opt.label}
           </option>
         ))}
       </select>
 
-      {value === "custom" && (
+      {range === "custom" && (
         <>
-          <label className="flex items-center gap-2 text-[10px] text-[var(--color-medium-brown)] font-bold uppercase tracking-wide">
+          <label className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-wide text-[var(--color-medium-brown)]">
             From
             <input
               type="date"
-              value={from}
-              onChange={(e) => apply("custom", e.target.value, to)}
+              value={fromValue}
+              onChange={(e) => setFromValue(e.target.value)}
               className={CONTROL_CLASS}
+              aria-label="Custom range start date"
             />
           </label>
-          <label className="flex items-center gap-2 text-[10px] text-[var(--color-medium-brown)] font-bold uppercase tracking-wide">
+          <label className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-wide text-[var(--color-medium-brown)]">
             To
             <input
               type="date"
-              value={to}
-              onChange={(e) => apply("custom", from, e.target.value)}
+              value={toValue}
+              onChange={(e) => setToValue(e.target.value)}
               className={CONTROL_CLASS}
+              aria-label="Custom range end date"
             />
           </label>
+          <button
+            type="button"
+            onClick={applyCustom}
+            className="text-[11px] font-bold bg-[var(--color-dark-brown)] text-white rounded-lg px-4 py-2 hover:bg-[var(--color-tan)] transition-colors"
+          >
+            Apply
+          </button>
+          {error && (
+            <span className="text-[11px] font-medium text-red-600" role="alert">
+              {error}
+            </span>
+          )}
         </>
       )}
     </div>

@@ -90,11 +90,25 @@ export default function TopProductsChart({ data = [] }) {
           </thead>
           <tbody>
             {data.map((item, i) => (
-              <tr key={item.name} className="border-b border-[var(--color-light-beige)] last:border-0">
+              <tr key={`${item.name}-${i}`} className="border-b border-[var(--color-light-beige)] last:border-0">
                 <td className="py-2 pr-3 text-[var(--color-medium-brown)]">{i + 1}</td>
-                <td className="py-2 pr-3 text-[var(--color-dark-brown)]">{item.name}</td>
+                <td className="py-2 pr-3">
+                  <div className="flex items-center gap-2.5 min-w-0">
+                    {item.image ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={item.image}
+                        alt=""
+                        className="w-8 h-10 object-cover rounded-md bg-[var(--color-light-beige)] shrink-0"
+                      />
+                    ) : (
+                      <div className="w-8 h-10 bg-[var(--color-light-beige)] rounded-md shrink-0"></div>
+                    )}
+                    <span className="text-[var(--color-dark-brown)] truncate">{item.name}</span>
+                  </div>
+                </td>
                 <td className="py-2 pr-3 text-right text-[var(--color-medium-brown)]">{item.units}</td>
-                <td className="py-2 text-right font-bold text-[var(--color-dark-brown)]">
+                <td className="py-2 text-right font-bold text-[var(--color-dark-brown)] whitespace-nowrap">
                   {formatEgp(item.revenue)}
                 </td>
               </tr>
