@@ -134,7 +134,7 @@ export default function ProductPageContent() {
                 <div className="flex items-center justify-between pt-2">
                   <span className="text-2xl font-bold text-dark-brown">EGP {product.price?.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
                   <span className={`text-[9px] font-black uppercase tracking-widest px-2.5 py-1 border rounded-sm ${inStock ? 'text-tan border-tan/20 bg-cream' : 'text-red-500 border-red-50'}`}>
-                    {inStock ? `${stock} in Stock` : 'Out of Stock'}
+                    {inStock ? `in Stock` : 'Out of Stock'}
                   </span>
                 </div>
               </div>

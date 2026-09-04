@@ -33,10 +33,10 @@ export default function SalesPerformanceChart({ data = [] }) {
         <>
           <div className="flex items-center gap-5 mb-4 text-[10px] font-bold uppercase tracking-wider text-[var(--color-medium-brown)]">
             <span className="flex items-center gap-1.5">
-              <span className="w-2.5 h-[2px] bg-[#765442] inline-block"></span> Revenue (delivered)
+              <span className="w-2.5 h-[2px] bg-[#765442] inline-block"></span> Revenue (excl. cancelled)
             </span>
             <span className="flex items-center gap-1.5">
-              <span className="w-2.5 h-[2px] bg-[#A9825A] inline-block"></span> Orders (all)
+              <span className="w-2.5 h-[2px] bg-[#A9825A] inline-block"></span> Orders (all statuses)
             </span>
           </div>
           <div style={{ width: "100%", height: 320 }}>
@@ -75,9 +75,9 @@ export default function SalesPerformanceChart({ data = [] }) {
                     name === "Revenue"
                       ? [
                           `EGP ${Number(value).toLocaleString(undefined, { minimumFractionDigits: 2 })}`,
-                          "Revenue (delivered)",
+                          "Revenue (excl. cancelled)",
                         ]
-                      : [`${value} order${value === 1 ? "" : "s"}`, "Orders (all)"]
+                      : [`${value} order${value === 1 ? "" : "s"}`, "Orders (all statuses)"]
                   }
                 />
                 <Line

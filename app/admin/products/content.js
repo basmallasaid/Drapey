@@ -1,7 +1,7 @@
 ﻿// app/admin/products/content.js
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { COMMON_SIZES, normalizeSize } from "@/lib/sizes";
 import { showToast, showError, confirmAction } from "@/lib/sweetalert";
@@ -37,6 +37,15 @@ export default function ProductsContent({ products, categories }) {
   const [images, setImages] = useState([]);
 
   const supabase = createClient();
+
+  useEffect(() => {
+    if (!showForm) return;
+    const previous = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = previous;
+    };
+  }, [showForm]);
 
   const filtered = productList.filter((p) => {
     const matchSearch = p.name?.toLowerCase().includes(search.toLowerCase());
@@ -164,7 +173,7 @@ export default function ProductsContent({ products, categories }) {
       });
 
       showToast("success", editing ? "Product updated." : "Product created.");
-      setShowForm(false);
+      closeForm();
     } catch (err) {
       showError("Could not save product", err.message || "Failed to save product.");
     } finally {
@@ -201,7 +210,17 @@ export default function ProductsContent({ products, categories }) {
     }
   }
   function startEdit(p) { /* التعليم الأصلي */ setEditing(p.id); setName(p.name); setDescription(p.description || ""); setPrice(p.price); setCategoryId(p.category_id || ""); setIsActive(p.is_active); setVariants((p.product_variants || []).map((v) => ({ size: normalizeSize(v.size), color: v.color, stock_quantity: v.stock_quantity, }))); setImages((p.product_images || []).slice().sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0)).map((img) => ({ image_url: img.image_url, is_primary: img.is_primary, }))); setShowForm(true); }
-  function startCreate() { setEditing(null); setName(""); setDescription(""); setPrice(""); setCategoryId(""); setIsActive(true); setVariants([emptyVariant()]); setImages([]); setShowForm(true); }
+  function resetForm() {
+    setName("");
+    setDescription("");
+    setPrice("");
+    setCategoryId("");
+    setIsActive(true);
+    setVariants([emptyVariant()]);
+    setImages([]);
+  }
+  function startCreate() { setEditing(null); resetForm(); setShowForm(true); }
+  function closeForm() { setShowForm(false); setEditing(null); resetForm(); }
 
   return (
     <div className="space-y-6">
@@ -245,18 +264,21 @@ export default function ProductsContent({ products, categories }) {
         </div>
       </div>
 
-      {/* Main Form (Overlay or In-line) */}
+      {/* Product Add/Edit Modal */}
       {showForm && (
-        <div className="bg-white rounded-[24px] border border-[var(--color-light-beige)] shadow-xl overflow-hidden animate-in fade-in slide-in-from-top-4 duration-300">
-          <div className="p-6 border-b border-[var(--color-light-beige)] flex justify-between items-center bg-[var(--color-cream)]">
-            <h3 className="font-bold text-lg text-[var(--color-dark-brown)]">{editing ? "Edit Product" : "Create New Product"}</h3>
-            <button onClick={() => setShowForm(false)} className="p-2 hover:bg-[var(--color-light-beige)] rounded-full transition-colors">
-              <X size={20} />
-            </button>
-          </div>
-          
-          <form onSubmit={handleSave} className="p-8">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
+        <div className="fixed inset-0 z-50 overflow-y-auto">
+          <div className="fixed inset-0 bg-black/40 backdrop-blur-sm" aria-hidden="true" />
+          <div className="min-h-full flex items-center justify-center p-4 sm:p-6">
+            <div className="relative bg-white w-full max-w-[1000px] rounded-[24px] border border-[var(--color-light-beige)] shadow-2xl animate-in fade-in slide-in-from-top-4 duration-300">
+              <div className="p-6 border-b border-[var(--color-light-beige)] flex justify-between items-center bg-[var(--color-cream)] rounded-t-[24px]">
+                <h3 className="font-bold text-lg text-[var(--color-dark-brown)]">{editing ? "Edit Product" : "Create New Product"}</h3>
+                <button onClick={closeForm} className="p-2 hover:bg-[var(--color-light-beige)] rounded-full transition-colors" aria-label="Close">
+                  <X size={20} />
+                </button>
+              </div>
+
+              <form onSubmit={handleSave} className="p-6 sm:p-8 max-h-[70vh] sm:max-h-[calc(100vh-10rem)] overflow-y-auto">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               
               {/* Left Column: General Info */}
               <div className="space-y-6">
@@ -362,6 +384,9 @@ export default function ProductsContent({ products, categories }) {
                 </div>
 
                 <div className="pt-10 flex flex-col gap-3">
+                   <button type="button" onClick={closeForm} disabled={saving} className="w-full py-4 bg-[var(--color-light-beige)] text-[var(--color-dark-brown)] rounded-xl font-bold hover:bg-[var(--color-cream)] transition-all disabled:opacity-50">
+                     Cancel
+                   </button>
                    <button type="submit" disabled={saving} className="w-full py-4 bg-[var(--color-dark-brown)] text-white rounded-xl font-bold hover:bg-[var(--color-tan)] transition-all disabled:opacity-50">
                      {saving ? "Processing..." : editing ? "Update Product" : "Publish Product"}
                    </button>
@@ -373,6 +398,8 @@ export default function ProductsContent({ products, categories }) {
               </div>
             </div>
           </form>
+            </div>
+          </div>
         </div>
       )}
 

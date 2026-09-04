@@ -1,7 +1,7 @@
 ﻿// app/admin/categories/content.js
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { showToast, showError, confirmAction } from "@/lib/sweetalert";
 import { 
@@ -27,11 +27,23 @@ export default function CategoriesContent({ categories }) {
 
   const supabase = createClient();
 
-  // (Ù†ÙØ³ Ø§Ù„Ø¯ÙˆØ§Ù„ startCreate, startEdit, handleFileChange ÙƒÙ…Ø§ Ù‡ÙŠ ÙÙŠ ÙƒÙˆØ¯Ùƒ)
-  function startCreate() {
-    setEditing(null); setName(""); setSlug(""); setDescription("");
+  // Prevent the page behind the modal from scrolling while the modal is open.
+  useEffect(() => {
+    if (!showForm) return;
+    const previous = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = previous;
+    };
+  }, [showForm]);
+
+  function resetForm() {
+    setName(""); setSlug(""); setDescription("");
     setImageMode("url"); setImageUrl(""); setPreview(""); setUploadFile(null);
-    setShowForm(true);
+  }
+
+  function startCreate() {
+    setEditing(null); resetForm(); setShowForm(true);
   }
 
   function startEdit(c) {
@@ -39,6 +51,10 @@ export default function CategoriesContent({ categories }) {
     setDescription(c.description || ""); setImageUrl(c.image_url || "");
     setPreview(c.image_url || ""); setImageMode("url");
     setUploadFile(null); setShowForm(true);
+  }
+
+  function closeForm() {
+    setShowForm(false); setEditing(null); resetForm();
   }
 
   async function handleSave(e) {
@@ -62,7 +78,7 @@ export default function CategoriesContent({ categories }) {
     }
   }
 
-  async function uploadCategoryImage(file) { /* ÙƒÙˆØ¯ Ø§Ù„Ø±ÙØ¹ Ø§Ù„Ø£ØµÙ„ÙŠ */ const path = `categories/${Date.now()}-${file.name}`; const { data, error } = await supabase.storage.from("product-images").upload(path, file); if (error) throw error; return supabase.storage.from("product-images").getPublicUrl(path).data.publicUrl; }
+  async function uploadCategoryImage(file) { const path = `categories/${Date.now()}-${file.name}`; const { data, error } = await supabase.storage.from("product-images").upload(path, file); if (error) throw error; return supabase.storage.from("product-images").getPublicUrl(path).data.publicUrl; }
 
   async function handleDelete(target) {
     const id = target?.id;
@@ -109,70 +125,80 @@ export default function CategoriesContent({ categories }) {
         </button>
       </div>
 
-      {/* Form Overlay Card */}
+      {/* Category Add/Edit Modal */}
       {showForm && (
-        <div className="bg-white rounded-[24px] border border-[var(--color-light-beige)] shadow-xl overflow-hidden animate-in fade-in slide-in-from-top-4 duration-300">
-          <div className="p-6 border-b border-[var(--color-light-beige)] flex justify-between items-center bg-[var(--color-cream)]">
-            <h3 className="font-bold text-[var(--color-dark-brown)]">{editing ? "Edit Category" : "New Category"}</h3>
-            <button onClick={() => setShowForm(false)} className="p-2 hover:bg-[var(--color-light-beige)] rounded-full transition-colors"><X size={20} /></button>
-          </div>
-          
-          <form onSubmit={handleSave} className="p-8 grid grid-cols-1 lg:grid-cols-2 gap-10">
-            <div className="space-y-5">
-              <div>
-                <label className="block text-xs font-bold mb-2 text-[var(--color-medium-brown)] uppercase tracking-wider">Category Name</label>
-                <input required value={name} onChange={(e) => setName(e.target.value)} className="w-full px-4 py-3 rounded-xl border border-[var(--color-light-beige)] focus:border-[var(--color-tan)] outline-none" placeholder="e.g. Summer Collection" />
-              </div>
-              <div>
-                <label className="block text-xs font-bold mb-2 text-[var(--color-medium-brown)] uppercase tracking-wider">URL Slug</label>
-                <div className="flex items-center gap-2 px-4 py-3 rounded-xl border border-[var(--color-light-beige)] bg-[var(--color-cream)]">
-                  <span className="text-[var(--color-medium-brown)] text-sm">/</span>
-                  <input required value={slug} onChange={(e) => setSlug(e.target.value)} className="bg-transparent w-full outline-none text-sm" placeholder="summer-collection" />
-                </div>
-              </div>
-              <div>
-                <label className="block text-xs font-bold mb-2 text-[var(--color-medium-brown)] uppercase tracking-wider">Description</label>
-                <textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={3} className="w-full px-4 py-3 rounded-xl border border-[var(--color-light-beige)] outline-none resize-none" placeholder="Short summary for customers..." />
-              </div>
-            </div>
-
-            <div className="space-y-5">
-              <div>
-                <label className="block text-xs font-bold mb-3 text-[var(--color-medium-brown)] uppercase tracking-wider">Cover Image</label>
-                <div className="flex gap-4 mb-4">
-                  <button type="button" onClick={() => setImageMode("url")} className={`px-4 py-2 rounded-lg text-xs font-bold border transition-all ${imageMode === 'url' ? 'bg-[var(--color-dark-brown)] text-white' : 'bg-white text-[var(--color-medium-brown)]'}`}>Link URL</button>
-                  <button type="button" onClick={() => setImageMode("upload")} className={`px-4 py-2 rounded-lg text-xs font-bold border transition-all ${imageMode === 'upload' ? 'bg-[var(--color-dark-brown)] text-white' : 'bg-white text-[var(--color-medium-brown)]'}`}>Upload File</button>
-                </div>
-
-                {imageMode === "url" ? (
-                  <input value={imageUrl} onChange={(e) => { setImageUrl(e.target.value); setPreview(e.target.value); }} className="w-full px-4 py-3 rounded-xl border border-[var(--color-light-beige)] outline-none text-sm" placeholder="https://..." />
-                ) : (
-                  <label className="flex flex-col items-center justify-center w-full h-32 rounded-2xl border-2 border-dashed border-[var(--color-light-beige)] bg-[var(--color-cream)] cursor-pointer hover:bg-[var(--color-light-beige)] transition-all">
-                    <UploadCloud size={24} className="text-[var(--color-medium-brown)] mb-2" />
-                    <span className="text-xs font-medium text-[var(--color-medium-brown)]">Click to upload category cover</span>
-                    <input type="file" className="hidden" onChange={(e) => {
-                      const file = e.target.files[0];
-                      setUploadFile(file);
-                      setPreview(URL.createObjectURL(file));
-                    }} />
-                  </label>
-                )}
-                
-                {preview && (
-                  <div className="mt-4 flex items-center gap-4 p-3 bg-[var(--color-cream)] rounded-xl border border-[var(--color-light-beige)]">
-                    <img src={preview} className="w-16 h-16 rounded-lg object-cover" alt="Preview" />
-                    <span className="text-xs text-[var(--color-medium-brown)]">Image preview ready</span>
-                  </div>
-                )}
-              </div>
-
-              <div className="pt-5">
-                <button type="submit" disabled={saving} className="w-full py-4 bg-[var(--color-dark-brown)] text-white rounded-xl font-bold hover:bg-[var(--color-tan)] transition-all shadow-lg">
-                  {saving ? "Saving..." : editing ? "Update Category" : "Save Category"}
+        <div className="fixed inset-0 z-50 overflow-y-auto">
+          <div className="fixed inset-0 bg-black/40 backdrop-blur-sm" aria-hidden="true" />
+          <div className="min-h-full flex items-center justify-center p-4 sm:p-6">
+            <div className="relative bg-white w-full max-w-[720px] rounded-[24px] border border-[var(--color-light-beige)] shadow-2xl animate-in fade-in slide-in-from-top-4 duration-300">
+              <div className="p-6 border-b border-[var(--color-light-beige)] flex justify-between items-center bg-[var(--color-cream)] rounded-t-[24px]">
+                <h3 className="font-bold text-lg text-[var(--color-dark-brown)]">{editing ? "Edit Category" : "Add Category"}</h3>
+                <button onClick={closeForm} className="p-2 hover:bg-[var(--color-light-beige)] rounded-full transition-colors" aria-label="Close">
+                  <X size={20} />
                 </button>
               </div>
+
+              <form onSubmit={handleSave} className="p-6 sm:p-8 grid grid-cols-1 lg:grid-cols-2 gap-8 max-h-[70vh] sm:max-h-[calc(100vh-10rem)] overflow-y-auto">
+                <div className="space-y-5">
+                  <div>
+                    <label className="block text-xs font-bold mb-2 text-[var(--color-medium-brown)] uppercase tracking-wider">Category Name</label>
+                    <input required value={name} onChange={(e) => setName(e.target.value)} className="w-full px-4 py-3 rounded-xl border border-[var(--color-light-beige)] focus:border-[var(--color-tan)] outline-none" placeholder="e.g. Summer Collection" />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold mb-2 text-[var(--color-medium-brown)] uppercase tracking-wider">URL Slug</label>
+                    <div className="flex items-center gap-2 px-4 py-3 rounded-xl border border-[var(--color-light-beige)] bg-[var(--color-cream)]">
+                      <span className="text-[var(--color-medium-brown)] text-sm">/</span>
+                      <input required value={slug} onChange={(e) => setSlug(e.target.value)} className="bg-transparent w-full outline-none text-sm" placeholder="summer-collection" />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold mb-2 text-[var(--color-medium-brown)] uppercase tracking-wider">Description</label>
+                    <textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={3} className="w-full px-4 py-3 rounded-xl border border-[var(--color-light-beige)] outline-none resize-none" placeholder="Short summary for customers..." />
+                  </div>
+                </div>
+
+                <div className="space-y-5">
+                  <div>
+                    <label className="block text-xs font-bold mb-3 text-[var(--color-medium-brown)] uppercase tracking-wider">Cover Image</label>
+                    <div className="flex gap-4 mb-4">
+                      <button type="button" onClick={() => setImageMode("url")} className={`px-4 py-2 rounded-lg text-xs font-bold border transition-all ${imageMode === 'url' ? 'bg-[var(--color-dark-brown)] text-white' : 'bg-white text-[var(--color-medium-brown)]'}`}>Link URL</button>
+                      <button type="button" onClick={() => setImageMode("upload")} className={`px-4 py-2 rounded-lg text-xs font-bold border transition-all ${imageMode === 'upload' ? 'bg-[var(--color-dark-brown)] text-white' : 'bg-white text-[var(--color-medium-brown)]'}`}>Upload File</button>
+                    </div>
+
+                    {imageMode === "url" ? (
+                      <input value={imageUrl} onChange={(e) => { setImageUrl(e.target.value); setPreview(e.target.value); }} className="w-full px-4 py-3 rounded-xl border border-[var(--color-light-beige)] outline-none text-sm" placeholder="https://..." />
+                    ) : (
+                      <label className="flex flex-col items-center justify-center w-full h-32 rounded-2xl border-2 border-dashed border-[var(--color-light-beige)] bg-[var(--color-cream)] cursor-pointer hover:bg-[var(--color-light-beige)] transition-all">
+                        <UploadCloud size={24} className="text-[var(--color-medium-brown)] mb-2" />
+                        <span className="text-xs font-medium text-[var(--color-medium-brown)]">Click to upload category cover</span>
+                        <input type="file" className="hidden" onChange={(e) => {
+                          const file = e.target.files[0];
+                          setUploadFile(file);
+                          setPreview(URL.createObjectURL(file));
+                        }} />
+                      </label>
+                    )}
+                    
+                    {preview && (
+                      <div className="mt-4 flex items-center gap-4 p-3 bg-[var(--color-cream)] rounded-xl border border-[var(--color-light-beige)]">
+                        <img src={preview} className="w-16 h-16 rounded-lg object-cover" alt="Preview" />
+                        <span className="text-xs text-[var(--color-medium-brown)]">Image preview ready</span>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="pt-5 flex flex-col gap-3">
+                    <button type="button" onClick={closeForm} disabled={saving} className="w-full py-4 bg-[var(--color-light-beige)] text-[var(--color-dark-brown)] rounded-xl font-bold hover:bg-[var(--color-cream)] transition-all disabled:opacity-50">
+                      Cancel
+                    </button>
+                    <button type="submit" disabled={saving} className="w-full py-4 bg-[var(--color-dark-brown)] text-white rounded-xl font-bold hover:bg-[var(--color-tan)] transition-all shadow-lg disabled:opacity-50">
+                      {saving ? "Saving..." : editing ? "Update Category" : "Save Category"}
+                    </button>
+                  </div>
+                </div>
+              </form>
             </div>
-          </form>
+          </div>
         </div>
       )}
 
